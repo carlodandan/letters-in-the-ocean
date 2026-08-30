@@ -1,0 +1,32 @@
+name = "letters-in-the-ocean-api"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[observability]
+enabled = true
+
+# --- Public configuration -------------------------------------------------
+# SESSION_SECRET here is a DEV-ONLY placeholder. Before deploying run:
+#   wrangler secret put SESSION_SECRET
+#   wrangler secret put ADMIN_TOKEN
+# Secrets set that way override anything in [vars].
+[vars]
+ALLOWED_ORIGIN = "http://localhost:5173"
+SESSION_SECRET = "dev-only-secret-do-not-ship-this"
+DAILY_FIND_LIMIT = "1"
+DAILY_WRITE_LIMIT = "1"
+DAILY_REPORT_LIMIT = "3"
+DAILY_IP_MULTIPLIER = "6"
+
+# --- D1: durable store for bottles, interactions, reports -----------------
+[[d1_databases]]
+binding = "DB"
+database_name = "letters-in-the-ocean"
+database_id = "8bbc36cc-8505-4e91-ad67-8879968bbbbe"
+migrations_dir = "migrations"
+
+# --- KV: fast rate-limit counters + stats cache (optional) ----------------
+# The API degrades gracefully to D1-only enforcement if this binding is absent.
+[[kv_namespaces]]
+binding = "RATE_KV"
+id = "48ad59abf6ed4eec9ba616efed258365"

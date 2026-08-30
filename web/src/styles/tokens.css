@@ -1,0 +1,103 @@
+/*
+ * One palette per time of day. The canvas reads these same custom properties
+ * through getComputedStyle, so the water, the sky and the interface can never
+ * drift out of agreement — there is exactly one place to change a colour.
+ *
+ * The phase is set by lib/sky.js on <html data-sky="...">.
+ */
+
+:root {
+  --ink: #eef3f7;
+  --ink-soft: #b9c9d6;
+  --ink-faint: #8ea3b4;
+
+  --paper: #f5eddc;
+  --paper-shade: #e7dcc4;
+  --paper-edge: #cbbb9b;
+  --paper-ink: #2f2b24;
+  --paper-ink-soft: #6a6152;
+
+  --glass: rgba(214, 238, 233, 0.42);
+  --glass-rim: rgba(240, 255, 250, 0.72);
+  --cork: #c08f52;
+  --cork-dark: #8c5f2d;
+
+  --focus: #ffe6a8;
+  --danger: #ffb4a2;
+
+  --step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.875rem);
+  --step-0: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --step-1: clamp(1.2rem, 1.1rem + 0.5vw, 1.4rem);
+  --step-2: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --step-3: clamp(2rem, 1.6rem + 2.2vw, 3.25rem);
+
+  --serif: 'EB Garamond', 'Iowan Old Style', Palatino, Georgia, serif;
+  --display: 'Fraunces', 'EB Garamond', Georgia, serif;
+  --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hand: 'Caveat', 'Segoe Script', cursive;
+
+  --measure: 34ch;
+  --ease-tide: cubic-bezier(0.32, 0.06, 0.24, 1);
+  --slow: 1400ms;
+  --slower: 2600ms;
+}
+
+/* Deep night: moonlight on black water. */
+:root,
+:root[data-sky='night'] {
+  --sky-top: #030a14;
+  --sky-mid: #061527;
+  --sky-horizon: #0e2f45;
+  --light-core: #eaf2ff;
+  --light-glow: rgba(190, 214, 255, 0.5);
+  --sea-far: #0c2437;
+  --sea-mid: #071a2a;
+  --sea-near: #03101c;
+  --foam: rgba(206, 228, 255, 0.5);
+  --stars: 0.85;
+}
+
+/* First light: indigo giving way to rose. */
+:root[data-sky='dawn'] {
+  --sky-top: #12203c;
+  --sky-mid: #45375a;
+  --sky-horizon: #d9906f;
+  --light-core: #ffe7c4;
+  --light-glow: rgba(255, 196, 140, 0.5);
+  --sea-far: #6a5a6b;
+  --sea-mid: #2f3a52;
+  --sea-near: #131e31;
+  --foam: rgba(255, 226, 206, 0.5);
+  --stars: 0.22;
+}
+
+/* Open daylight: the calmest, palest state. */
+:root[data-sky='day'] {
+  --sky-top: #16405f;
+  --sky-mid: #2c6f8e;
+  --sky-horizon: #a9d3d8;
+  --light-core: #fdfbef;
+  --light-glow: rgba(255, 253, 233, 0.42);
+  --sea-far: #6ea7ac;
+  --sea-mid: #2c6a79;
+  --sea-near: #123444;
+  --foam: rgba(240, 255, 255, 0.58);
+  --stars: 0;
+  --ink: #f4f9fb;
+  --ink-soft: #d6e6ec;
+  --ink-faint: #a8c3ce;
+}
+
+/* Late gold: the hour the site was designed for. */
+:root[data-sky='sunset'] {
+  --sky-top: #1d2144;
+  --sky-mid: #7a416a;
+  --sky-horizon: #e79a63;
+  --light-core: #fff1cd;
+  --light-glow: rgba(255, 176, 106, 0.55);
+  --sea-far: #a2696a;
+  --sea-mid: #4a3a58;
+  --sea-near: #16182c;
+  --foam: rgba(255, 216, 190, 0.5);
+  --stars: 0.15;
+}

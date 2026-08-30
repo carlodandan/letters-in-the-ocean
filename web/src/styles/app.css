@@ -1,0 +1,385 @@
+/* --- Shell ---------------------------------------------------------------- */
+
+.shell {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100%;
+  height: 100dvh;
+  padding-block: env(safe-area-inset-top) env(safe-area-inset-bottom);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  isolation: isolate;
+}
+
+.ocean-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  display: block;
+}
+
+/* Draws the eye to the middle and keeps text off the brightest water. */
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 46%, transparent 38%, rgba(3, 12, 22, 0.55) 100%),
+    linear-gradient(to bottom, rgba(3, 12, 22, 0.35) 0%, transparent 22%, rgba(3, 12, 22, 0.4) 100%);
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+.chrome--top {
+  justify-content: space-between;
+}
+
+.chrome--bottom {
+  justify-content: center;
+  text-align: center;
+}
+
+/* --- Stage ---------------------------------------------------------------- */
+
+.stage {
+  display: grid;
+  place-items: center;
+  padding-inline: clamp(1rem, 5vw, 2.5rem);
+  padding-block: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.scene {
+  display: grid;
+  justify-items: center;
+  gap: clamp(1.25rem, 3vh, 2.25rem);
+  width: min(100%, 46rem);
+  text-align: center;
+  animation: scene-rise var(--slow) var(--ease-tide) both;
+}
+
+@keyframes scene-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 1.25rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* --- Type ----------------------------------------------------------------- */
+
+.eyebrow {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.title {
+  font-size: var(--step-3);
+  letter-spacing: 0.01em;
+}
+
+/* Every scene past the homepage still needs a heading — just a smaller one. */
+.scene-title {
+  font-size: var(--step-2);
+  font-weight: 300;
+  color: var(--ink-soft);
+}
+
+.lede {
+  max-width: var(--measure);
+  font-size: var(--step-1);
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.quiet {
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+  letter-spacing: 0.04em;
+}
+
+/* --- Controls ------------------------------------------------------------- */
+
+.tide-button {
+  --glow: rgba(255, 236, 204, 0.16);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.75rem 1.75rem;
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  letter-spacing: 0.06em;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--glow), rgba(9, 26, 40, 0.5));
+  border: 1px solid var(--glass-rim);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  transition:
+    transform 400ms var(--ease-tide),
+    background-color 400ms var(--ease-tide),
+    border-color 400ms var(--ease-tide),
+    box-shadow 400ms var(--ease-tide);
+}
+
+/* Interactive states raise contrast rather than lowering it. */
+.tide-button:hover,
+.tide-button:focus-visible {
+  --glow: rgba(255, 240, 214, 0.3);
+  border-color: var(--light-core);
+  box-shadow: 0 0 2.5rem -0.5rem var(--light-glow);
+  transform: translate3d(0, -1px, 0);
+}
+
+.tide-button:active {
+  transform: translate3d(0, 1px, 0);
+}
+
+.tide-button[aria-disabled='true'],
+.tide-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.tide-button--quiet {
+  min-height: 2.5rem;
+  padding: 0.5rem 1.1rem;
+  font-size: var(--step--1);
+  color: var(--ink-soft);
+  background: rgba(9, 26, 40, 0.35);
+  border-color: rgba(214, 238, 233, 0.28);
+}
+
+.tide-button--text {
+  min-height: 2.5rem;
+  padding: 0.4rem 0.6rem;
+  background: none;
+  border-color: transparent;
+  backdrop-filter: none;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-decoration-color: rgba(185, 201, 214, 0.4);
+  text-underline-offset: 0.25em;
+}
+
+.tide-button--text:hover,
+.tide-button--text:focus-visible {
+  color: var(--ink);
+  box-shadow: none;
+  text-decoration-color: currentColor;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+/* A horizon line between the two things you can do here. */
+.divider {
+  width: min(12rem, 40%);
+  height: 1px;
+  border: 0;
+  background: linear-gradient(to right, transparent, var(--glass-rim), transparent);
+  opacity: 0.4;
+}
+
+/* --- Notices -------------------------------------------------------------- */
+
+.notice {
+  max-width: var(--measure);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.notice--problem {
+  color: var(--danger);
+}
+
+.notice:empty {
+  display: none;
+}
+
+/* --- The writing desk ----------------------------------------------------- */
+
+.desk {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 34rem);
+  text-align: start;
+}
+
+.paper-field {
+  position: relative;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  background:
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-shade) 100%);
+  border-radius: 2px 3px 2px 3px;
+  box-shadow:
+    0 1.5rem 3rem -1rem rgba(2, 10, 18, 0.65),
+    inset 0 0 3rem rgba(203, 187, 155, 0.35);
+  /* Torn-looking deckle edge, cheaper and softer than an image. */
+  clip-path: polygon(
+    0.4% 0.6%, 99.5% 0%, 100% 99.2%, 0.6% 100%
+  );
+}
+
+.paper-field textarea {
+  display: block;
+  width: 100%;
+  min-height: 11.4em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--paper-ink);
+  font-family: var(--serif);
+  font-size: var(--step-1);
+  line-height: 1.9em;
+  resize: none;
+  /* Faint ruled lines, locked to the line height above. */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.9em - 1px),
+    rgba(112, 100, 78, 0.22) calc(1.9em - 1px),
+    rgba(112, 100, 78, 0.22) 1.9em
+  );
+}
+
+.paper-field textarea:focus {
+  outline: 0;
+}
+
+.paper-field:focus-within {
+  box-shadow:
+    0 1.5rem 3rem -1rem rgba(2, 10, 18, 0.7),
+    inset 0 0 3rem rgba(203, 187, 155, 0.35),
+    0 0 0 2px var(--focus);
+}
+
+.paper-field textarea::placeholder {
+  color: var(--paper-ink-soft);
+  font-style: italic;
+  opacity: 1;
+}
+
+.desk-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+.counter--over {
+  color: var(--danger);
+}
+
+/* --- Ocean statistics: quiet, and never the point ------------------------- */
+
+.stats {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+/* --- Report dialog -------------------------------------------------------- */
+
+.sheet::backdrop {
+  background: rgba(2, 9, 17, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.sheet {
+  width: min(92vw, 26rem);
+  margin: auto;
+  padding: clamp(1.25rem, 4vw, 1.75rem);
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(16, 38, 56, 0.96), rgba(6, 20, 32, 0.98));
+  border: 1px solid rgba(214, 238, 233, 0.28);
+  border-radius: 6px;
+  box-shadow: 0 2rem 4rem -1rem rgba(0, 0, 0, 0.7);
+  overscroll-behavior: contain;
+}
+
+.sheet h2 {
+  font-size: var(--step-1);
+  margin-bottom: 0.5rem;
+}
+
+.sheet fieldset {
+  margin: 1rem 0 1.25rem;
+  padding: 0;
+  border: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.sheet legend {
+  padding: 0;
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--ink-faint);
+}
+
+/* A whole row is one hit target, comfortably over 44px. */
+.sheet label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.5rem;
+  font-family: var(--sans);
+  font-size: var(--step-0);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sheet label:hover {
+  background: rgba(214, 238, 233, 0.08);
+}
+
+.sheet input[type='radio'] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--focus);
+}
+
+.sheet-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

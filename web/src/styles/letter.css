@@ -1,0 +1,133 @@
+/*
+ * The letter.
+ *
+ * A found message is not a modal. It is a piece of paper that came out of a
+ * bottle: it rises, unfolds along its creases, and the handwriting appears line
+ * by line. Nothing about it is a card with a title bar.
+ */
+
+.letter {
+  position: relative;
+  width: min(100%, 32rem);
+  padding: clamp(1.75rem, 6vw, 3rem) clamp(1.5rem, 5vw, 2.75rem);
+  text-align: start;
+  color: var(--paper-ink);
+  background:
+    radial-gradient(120% 80% at 20% 0%, rgba(255, 252, 240, 0.9), transparent 60%),
+    linear-gradient(172deg, var(--paper) 0%, var(--paper-shade) 100%);
+  border-radius: 2px;
+  box-shadow:
+    0 2rem 4rem -1.25rem rgba(2, 10, 18, 0.7),
+    inset 0 0 4rem rgba(190, 172, 136, 0.32);
+  clip-path: polygon(0.5% 0.4%, 99.4% 0%, 100% 99.4%, 0.4% 100%);
+  animation:
+    letter-rise 1600ms var(--ease-tide) both,
+    letter-unfold 2200ms var(--ease-tide) 500ms both;
+  transform-origin: 50% 20%;
+}
+
+@keyframes letter-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 3rem, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes letter-unfold {
+  from {
+    transform: perspective(1400px) rotateX(-72deg) scale(0.86);
+  }
+  to {
+    transform: perspective(1400px) rotateX(0deg) scale(1);
+  }
+}
+
+/* The creases the paper was folded along. */
+.letter::before,
+.letter::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(120, 106, 80, 0.28) 12%,
+    rgba(120, 106, 80, 0.28) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.letter::before {
+  top: 33.33%;
+}
+
+.letter::after {
+  top: 66.66%;
+}
+
+.letter-text {
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 1rem + 1.1vw, 1.6rem);
+  line-height: 1.75;
+  letter-spacing: 0.005em;
+  hyphens: auto;
+  /* User text can be one 500-character word; never let it push the paper wide. */
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.letter-text p {
+  animation: ink-appear 1400ms var(--ease-tide) both;
+  animation-delay: calc(1100ms + var(--line, 0) * 420ms);
+}
+
+@keyframes ink-appear {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.letter-text p + p {
+  margin-top: 0.9em;
+}
+
+.letter-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: clamp(1.5rem, 4vw, 2.25rem);
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(120, 106, 80, 0.22);
+  font-family: var(--sans);
+  font-size: var(--step--1);
+  color: var(--paper-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The one place handwriting earns its keep. */
+.letter-sign {
+  font-family: var(--hand);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--paper-ink-soft);
+}
+
+.letter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  animation: ink-appear 1200ms var(--ease-tide) 2600ms both;
+}

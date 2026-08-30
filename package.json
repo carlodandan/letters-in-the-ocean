@@ -1,0 +1,23 @@
+{
+  "name": "letters-in-the-ocean",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A quiet corner of the internet where strangers leave small pieces of kindness for each other.",
+  "type": "module",
+  "workspaces": [
+    "web",
+    "worker"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "dev:api": "npm run dev --workspace=worker",
+    "build": "npm run build --workspace=web",
+    "preview": "npm run preview --workspace=web",
+    "test": "npm run test --workspace=worker",
+    "db:local": "npm run db:local --workspace=worker",
+    "db:remote": "npm run db:remote --workspace=worker"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

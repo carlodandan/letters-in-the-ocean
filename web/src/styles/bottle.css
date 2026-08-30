@@ -1,0 +1,141 @@
+/*
+ * The bottle.
+ *
+ * Two nested layers, deliberately: the outer element owns the one-shot journey
+ * (drifting in from the horizon, or sinking away), the inner element owns the
+ * endless sway. Keeping them apart means neither animation has to know about
+ * the other, and both stay on transform and opacity only.
+ */
+
+.bottle-field {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: clamp(12rem, 34vh, 20rem);
+  perspective: 900px;
+}
+
+.bottle-field[data-phase='approach'] {
+  animation: bottle-approach 9s var(--ease-tide) both;
+}
+
+.bottle-field[data-phase='leaving'] {
+  animation: bottle-leaving 4.5s var(--ease-tide) both;
+}
+
+@keyframes bottle-approach {
+  from {
+    opacity: 0;
+    transform: translate3d(18vw, -14vh, 0) scale(0.14);
+  }
+  35% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes bottle-leaving {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  30% {
+    transform: translate3d(-4vw, 6vh, 0) scale(0.86) rotate(-8deg);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(-26vw, -6vh, 0) scale(0.1) rotate(-14deg);
+  }
+}
+
+.bottle {
+  display: block;
+  border-radius: 50% / 22%;
+  animation: bottle-sway 11s ease-in-out infinite;
+  transition: filter 600ms var(--ease-tide);
+  filter: drop-shadow(0 1.2rem 1.6rem rgba(2, 10, 18, 0.55));
+}
+
+@keyframes bottle-sway {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-5deg);
+  }
+  25% {
+    transform: translate3d(0.6rem, -0.5rem, 0) rotate(1deg);
+  }
+  50% {
+    transform: translate3d(0, -0.9rem, 0) rotate(5deg);
+  }
+  75% {
+    transform: translate3d(-0.6rem, -0.4rem, 0) rotate(1deg);
+  }
+}
+
+.bottle:hover,
+.bottle:focus-visible {
+  filter: drop-shadow(0 1.2rem 2rem rgba(2, 10, 18, 0.6))
+    drop-shadow(0 0 1.75rem var(--light-glow));
+}
+
+.bottle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 12px;
+}
+
+.bottle-art {
+  display: block;
+  width: clamp(6.5rem, 22vw, 10rem);
+  height: auto;
+}
+
+.bottle-art--small {
+  width: clamp(4.5rem, 14vw, 6.5rem);
+}
+
+/* The cork lifts and turns loose when the letter is opened. */
+.bottle-art .cork {
+  transition: transform 1600ms var(--ease-tide);
+}
+
+/* The paper leaves the bottle shortly after the cork does. */
+.bottle-art .bottle-paper {
+  transition: opacity 900ms var(--ease-tide) 900ms;
+}
+
+.bottle[data-open='true'] .cork {
+  transform: translate(2px, -46px) rotate(24deg);
+}
+
+/* A faint halo on the water, so the bottle reads as findable without hover. */
+.bottle-halo {
+  position: absolute;
+  width: clamp(9rem, 30vw, 14rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--light-glow) 0%, transparent 62%);
+  opacity: 0.5;
+  animation: halo-breathe 7s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes halo-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.32;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.58;
+  }
+}
+
+.bottle-stack {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
