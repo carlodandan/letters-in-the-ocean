@@ -14,11 +14,19 @@ const VERSION = 'v1';
  * Clearing cookies still produces a fresh identity — that is why the daily
  * limit also considers a per-day IP bucket (see quota.js). Neither signal is
  * trusted alone, and no client-side value is trusted at all.
+ *
+ * `mint: false` reads an identity without creating one. Only requests that
+ * actually do something hand out an identity, because a browser arriving with no
+ * cookie may have several requests in flight at once: if each of them minted,
+ * each would answer with a different `set-cookie`, the last one would win, and
+ * whatever the others recorded would belong to an id the browser had already
+ * thrown away. See the route table in index.js.
  */
-export async function readVisitor(request, env) {
+export async function readVisitor(request, env, { mint = true } = {}) {
   const raw = parseCookies(request.headers.get('cookie')).get(COOKIE_NAME);
   const parsed = await verifyToken(raw, env.SESSION_SECRET);
   if (parsed) return { id: parsed.id, issuedAt: parsed.issuedAt, isNew: false, setCookie: null };
+  if (!mint) return { id: null, issuedAt: null, isNew: false, setCookie: null };
 
   const id = uuid();
   const issuedAt = Math.floor(Date.now() / 1000);

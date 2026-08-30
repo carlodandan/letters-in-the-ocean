@@ -26,9 +26,9 @@ describe('GET /api/state', () => {
     assert.match(data.today.resetsAt, /T00:00:00\.000Z$/);
   });
 
-  it('issues a signed HttpOnly cookie on the first request', async () => {
+  it('issues a signed HttpOnly cookie on the first action', async () => {
     const visitor = ocean().visitor();
-    const { headers } = await visitor.get('/api/state');
+    const { headers } = await visitor.get('/api/bottle/random');
     const cookie = headers.getSetCookie()[0];
 
     assert.match(cookie, /^lio_visitor=v1\./);
@@ -37,12 +37,19 @@ describe('GET /api/state', () => {
   });
 
   it('ignores a forged cookie and starts a new anonymous visitor', async () => {
-    const visitor = ocean().visitor();
+    const sea = ocean();
+    const visitor = sea.visitor();
     visitor.cookie = 'lio_visitor=v1.pretend-id.1730000000.notarealsignature';
-    const { headers, data } = await visitor.get('/api/state');
+    const state = await visitor.get('/api/state');
 
-    assert.equal(headers.getSetCookie().length, 1);
-    assert.equal(data.today.find.available, true);
+    // A forged cookie buys nothing: the signature does not verify, so the
+    // visitor is simply nobody, with a whole day still in front of them.
+    assert.equal(state.data.today.find.available, true);
+    assert.equal(state.data.today.find.bottleId, null);
+
+    const found = await visitor.get('/api/bottle/random');
+    assert.equal(found.status, 200);
+    assert.equal(found.headers.getSetCookie().length, 1);
   });
 });
 
@@ -445,6 +452,41 @@ describe('GET /api/stats', () => {
     assert.equal(data.found >= 1, true);
     assert.equal(data.foundToday >= 1, true);
     assert.equal(typeof data.drifts, 'number');
+  });
+
+  it('is nobody in particular, so it never hands out an identity', async () => {
+    const sea = ocean();
+    // Reads must not mint a visitor. On a first visit several of them can be in
+    // flight at once, and a `set-cookie` from one of those could land after the
+    // find and orphan whatever the find recorded. Only actions hand out an id.
+    const stats = await sea.visitor().get('/api/stats');
+    assert.equal(stats.status, 200);
+    assert.deepEqual(stats.headers.getSetCookie(), []);
+
+    const health = await sea.visitor().get('/api/health');
+    assert.deepEqual(health.headers.getSetCookie(), []);
+
+    const state = await sea.visitor().get('/api/state');
+    assert.equal(state.status, 200);
+    assert.deepEqual(state.headers.getSetCookie(), []);
+
+    const found = await sea.visitor().get('/api/bottle/random');
+    assert.equal(found.headers.getSetCookie().length, 1);
+  });
+
+  it('keeps the identity it issued when a read follows the action', async () => {
+    const sea = ocean();
+    const visitor = sea.visitor();
+    // The shape of the bug this guards: orient, act, orient again, act again on
+    // the letter you were just handed. If the second read reissued an identity,
+    // the letter would no longer be in this visitor's hands.
+    await visitor.get('/api/state');
+    const found = await visitor.get('/api/bottle/random');
+    const between = await visitor.get('/api/state');
+    assert.deepEqual(between.headers.getSetCookie(), []);
+
+    const released = await visitor.post(`/api/bottle/${found.data.bottle.id}/release`);
+    assert.equal(released.status, 200);
   });
 });
 

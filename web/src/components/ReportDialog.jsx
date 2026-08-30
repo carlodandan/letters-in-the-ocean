@@ -61,7 +61,9 @@ export default function ReportDialog({ open, reasons, onClose, onSubmit, busy, n
           ))}
         </fieldset>
 
-        <p className={notice ? 'notice notice--problem' : 'notice'}>{notice}</p>
+        <p className={notice ? 'notice notice--problem' : 'notice'} aria-live="polite">
+          {notice}
+        </p>
 
         <div className="sheet-actions">
           <button

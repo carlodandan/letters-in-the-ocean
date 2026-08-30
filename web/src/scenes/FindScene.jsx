@@ -160,7 +160,14 @@ export default function FindScene({ onState, sound, reportReasons }) {
         </Letter>
       ) : null}
 
-      <p className={problem ? 'notice notice--problem' : 'notice'}>{notice}</p>
+      {/*
+        Everything the scene has to say in words — a refusal, a failed report, a
+        letter sent on. Announced politely, because it is the outcome of
+        something the visitor just did.
+      */}
+      <p className={problem ? 'notice notice--problem' : 'notice'} aria-live="polite">
+        {notice}
+      </p>
 
       {stage === 'empty' ? (
         <div className="actions">

@@ -36,7 +36,19 @@ export default function WriteScene({ onState, sound, limits, replyTo }) {
   const ready = !tooShort && !tooLong;
 
   function seal() {
-    if (!ready) return;
+    // The button stays live even when the letter is too short: a control that
+    // simply refuses to respond explains nothing, so it says what is missing and
+    // puts the writer back on the paper.
+    if (tooShort || tooLong) {
+      setNotice(
+        tooShort
+          ? `A few more words first — ${formatCount(minLength)} characters at the least.`
+          : `That is ${formatCount(count - maxLength)} more than a bottle holds. Trim it a little.`,
+      );
+      setProblem(true);
+      field.current?.focus();
+      return;
+    }
     setNotice('');
     setProblem(false);
     sound.play('cork');
@@ -93,12 +105,17 @@ export default function WriteScene({ onState, sound, limits, replyTo }) {
           <div className="paper-field">
             <textarea
               id="letter"
+              name="letter"
               ref={field}
               value={text}
               onChange={(event) => setText(event.target.value)}
               placeholder="Whoever finds this…"
               aria-describedby="letter-count"
               spellCheck="true"
+              // Nothing here should be remembered by the browser and offered
+              // back on the next visit: the letter is meant to be written once
+              // and let go of.
+              autoComplete="off"
             />
           </div>
 
@@ -109,10 +126,12 @@ export default function WriteScene({ onState, sound, limits, replyTo }) {
             <span>{lengthHint({ count, minLength, maxLength })}</span>
           </div>
 
-          <p className={problem ? 'notice notice--problem' : 'notice'}>{notice}</p>
+          <p className={problem ? 'notice notice--problem' : 'notice'} aria-live="polite">
+            {notice}
+          </p>
 
           <div className="actions">
-            <button type="button" className="tide-button" onClick={seal} disabled={!ready}>
+            <button type="button" className="tide-button" onClick={seal} aria-disabled={!ready}>
               Put it in a bottle
             </button>
             <Link className="tide-button tide-button--text" href="/">
@@ -130,7 +149,9 @@ export default function WriteScene({ onState, sound, limits, replyTo }) {
           <p className="lede">
             {stage === 'leaving' ? 'Letting it go…' : 'Sealed. It is ready whenever you are.'}
           </p>
-          <p className={problem ? 'notice notice--problem' : 'notice'}>{notice}</p>
+          <p className={problem ? 'notice notice--problem' : 'notice'} aria-live="polite">
+            {notice}
+          </p>
           <div className="actions">
             <button type="button" className="tide-button" onClick={release} disabled={busy}>
               Release into the ocean

@@ -121,6 +121,17 @@
 
 /* --- Controls ------------------------------------------------------------- */
 
+/*
+ * The lit edge of a button is a gradient stop, and a gradient only animates if
+ * the custom property inside it is typed. Registering it is what makes the glow
+ * fade in rather than snap; without support the change simply happens at once.
+ */
+@property --glow {
+  syntax: '<color>';
+  inherits: false;
+  initial-value: rgba(255, 236, 204, 0.16);
+}
+
 .tide-button {
   --glow: rgba(255, 236, 204, 0.16);
   position: relative;
@@ -140,7 +151,7 @@
   backdrop-filter: blur(6px);
   transition:
     transform 400ms var(--ease-tide),
-    background-color 400ms var(--ease-tide),
+    --glow 400ms var(--ease-tide),
     border-color 400ms var(--ease-tide),
     box-shadow 400ms var(--ease-tide);
 }

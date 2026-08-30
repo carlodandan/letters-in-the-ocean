@@ -96,8 +96,15 @@
   width: clamp(4.5rem, 14vw, 6.5rem);
 }
 
-/* The cork lifts and turns loose when the letter is opened. */
+/*
+ * The cork lifts and turns loose when the letter is opened. `transform-box`
+ * matters here: without it an SVG transform is measured from the corner of the
+ * viewBox, so the rotate would swing the cork across the picture instead of
+ * turning it where it sits.
+ */
 .bottle-art .cork {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
   transition: transform 1600ms var(--ease-tide);
 }
 

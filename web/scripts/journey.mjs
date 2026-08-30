@@ -162,9 +162,9 @@ try {
   expect('release is offered', /send it further/i.test(body));
 
   expect('release is clickable', await page.clickText('Send it further'));
-  await sleep(3000);
+  await sleep(4000);
   body = await page.text();
-  expect('the letter goes back in the water', /back into the water/i.test(body));
+  expect('the letter goes back in the water', /back into the water/i.test(body), body.slice(0, 300));
 
   // --- Writing and releasing a letter --------------------------------------
   await page.go('/write');
@@ -196,6 +196,21 @@ try {
   await sleep(600);
   body = await page.text();
   expect('reduced motion opens the letter without waiting', /for whoever found it/i.test(body));
+
+  // The letter's paragraphs and its buttons are revealed by staggered CSS
+  // animations. Reading the text is not enough to prove they are visible: with
+  // motion turned off they must already be at full opacity, not waiting out a
+  // delay nobody asked for.
+  const shown = await page.evaluate(`(() => {
+    const nodes = [
+      ...document.querySelectorAll('.letter-text p'),
+      document.querySelector('.letter-actions'),
+    ].filter(Boolean);
+    if (nodes.length === 0) return 'nothing rendered';
+    const hidden = nodes.filter((node) => Number(getComputedStyle(node).opacity) < 0.99);
+    return hidden.length === 0 ? 'visible' : \`\${hidden.length}/\${nodes.length} still faded\`;
+  })()`);
+  expect('reduced motion shows the words and the choices at once', shown === 'visible', shown);
 } finally {
   browser.kill();
 }

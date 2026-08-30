@@ -93,7 +93,7 @@ textarea {
   position: absolute;
   z-index: 40;
   inset-inline-start: 1rem;
-  inset-block-start: -4rem;
+  inset-block-start: calc(1rem + env(safe-area-inset-top));
   padding: 0.6rem 1rem;
   font-family: var(--sans);
   font-size: var(--step--1);
@@ -101,11 +101,14 @@ textarea {
   color: var(--ink);
   border: 1px solid var(--glass-rim);
   border-radius: 999px;
-  transition: inset-block-start 160ms var(--ease-tide);
+  /* Parked off-screen by transform rather than by moving the box, so showing it
+     costs a composite instead of a layout. */
+  transform: translateY(-5rem);
+  transition: transform 160ms var(--ease-tide);
 }
 
 .skip-link:focus-visible {
-  inset-block-start: calc(1rem + env(safe-area-inset-top));
+  transform: translateY(0);
 }
 
 /* --- Motion --------------------------------------------------------------- */
@@ -114,14 +117,21 @@ textarea {
  * Everything below is decoration. With reduced motion the drift, the sway and
  * the reveal all resolve instantly to their finished state — the whole journey
  * is still completable, it simply stops moving.
+ *
+ * The delays matter as much as the durations: several reveals here are staggered
+ * with `animation-delay` and `both`, which holds them at opacity 0 until their
+ * turn. Zeroing only the duration would leave a letter invisible for seconds
+ * with motion turned off, so the delays go to zero too.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }
