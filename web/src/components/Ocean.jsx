@@ -225,7 +225,7 @@ export default function Ocean({ sky }) {
 
     function paint(time) {
       const { width, height } = geometry;
-      const lightX = width * 0.63;
+      const lightX = width * 0.70;
       ctx.clearRect(0, 0, width, height);
       drawSky(ctx, geometry, palette);
       drawStars(ctx, geometry, palette, time);
