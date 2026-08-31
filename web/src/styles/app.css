@@ -251,6 +251,7 @@
 .paper-field {
   position: relative;
   padding: clamp(1.25rem, 4vw, 2rem);
+  text-shadow: none;
   background:
     linear-gradient(180deg, var(--paper) 0%, var(--paper-shade) 100%);
   border-radius: 2px 3px 2px 3px;
@@ -266,13 +267,13 @@
 .paper-field textarea {
   display: block;
   width: 100%;
-  min-height: 11.4em;
+  min-height: 9.5em;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--paper-ink);
-  font-family: var(--serif);
-  font-size: var(--step-1);
+  font-family: var(--hand);
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.8rem);
   line-height: 1.9em;
   resize: none;
   /* Faint ruled lines, locked to the line height above. */

@@ -9,17 +9,19 @@
 .letter {
   position: relative;
   width: min(100%, 32rem);
-  padding: clamp(1.75rem, 6vw, 3rem) clamp(1.5rem, 5vw, 2.75rem);
+  padding: clamp(1.25rem, 4vw, 2rem);
   text-align: start;
   color: var(--paper-ink);
+  text-shadow: none;
   background:
-    radial-gradient(120% 80% at 20% 0%, rgba(255, 252, 240, 0.9), transparent 60%),
-    linear-gradient(172deg, var(--paper) 0%, var(--paper-shade) 100%);
-  border-radius: 2px;
+    linear-gradient(180deg, var(--paper) 0%, var(--paper-shade) 100%);
+  border-radius: 2px 3px 2px 3px;
   box-shadow:
-    0 2rem 4rem -1.25rem rgba(2, 10, 18, 0.7),
-    inset 0 0 4rem rgba(190, 172, 136, 0.32);
-  clip-path: polygon(0.5% 0.4%, 99.4% 0%, 100% 99.4%, 0.4% 100%);
+    0 1.5rem 3rem -1rem rgba(2, 10, 18, 0.65),
+    inset 0 0 3rem rgba(203, 187, 155, 0.35);
+  clip-path: polygon(
+    0.4% 0.6%, 99.5% 0%, 100% 99.2%, 0.6% 100%
+  );
   animation:
     letter-rise 1600ms var(--ease-tide) both,
     letter-unfold 2200ms var(--ease-tide) 500ms both;
@@ -46,45 +48,33 @@
   }
 }
 
-/* The creases the paper was folded along. */
-.letter::before,
-.letter::after {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(120, 106, 80, 0.28) 12%,
-    rgba(120, 106, 80, 0.28) 88%,
-    transparent
-  );
-  pointer-events: none;
-}
 
-.letter::before {
-  top: 33.33%;
-}
-
-.letter::after {
-  top: 66.66%;
-}
 
 .letter-text {
-  font-family: var(--serif);
-  font-size: clamp(1.15rem, 1rem + 1.1vw, 1.6rem);
-  line-height: 1.75;
+  display: flex;
+  flex-direction: column;
+  min-height: 9.5em;
+  font-family: var(--hand);
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.8rem);
+  line-height: 1.9em;
   letter-spacing: 0.005em;
   hyphens: auto;
   /* User text can be one 500-character word; never let it push the paper wide. */
   overflow-wrap: anywhere;
   min-width: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(1.9em - 1px),
+    rgba(112, 100, 78, 0.22) calc(1.9em - 1px),
+    rgba(112, 100, 78, 0.22) 1.9em
+  );
 }
 
 .letter-text p {
   animation: ink-appear 1400ms var(--ease-tide) both;
   animation-delay: calc(1100ms + var(--line, 0) * 420ms);
+  margin: 0;
 }
 
 @keyframes ink-appear {
@@ -99,7 +89,7 @@
 }
 
 .letter-text p + p {
-  margin-top: 0.9em;
+  margin-top: 1.9em;
 }
 
 .letter-meta {
