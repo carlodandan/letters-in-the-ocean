@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import Ocean from './components/Ocean.jsx';
 import SoundToggle from './components/SoundToggle.jsx';
+import PrivacyModal from './components/PrivacyModal.jsx';
 import FindScene from './scenes/FindScene.jsx';
 import Landing from './scenes/Landing.jsx';
 import WriteScene from './scenes/WriteScene.jsx';
@@ -33,6 +34,7 @@ export default function App() {
   const [state, setState] = useState(null);
   const [stats, setStats] = useState(null);
   const [lost, setLost] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const stage = useRef(null);
   const firstScene = useRef(true);
 
@@ -107,8 +109,19 @@ export default function App() {
       <footer className="chrome chrome--bottom">
         <p className="quiet">
           Anonymous, unrecorded, and gone when you close the tab. One letter, one bottle a day.
+          <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>•</span>
+          <button 
+            type="button" 
+            className="quiet" 
+            style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', textUnderlineOffset: '0.2em', cursor: 'pointer' }}
+            onClick={() => setPrivacyOpen(true)}
+          >
+            Privacy
+          </button>
         </p>
       </footer>
+      
+      <PrivacyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
 }
