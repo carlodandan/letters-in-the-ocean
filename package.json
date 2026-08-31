@@ -14,6 +14,9 @@
     "build": "npm run build --workspace=web",
     "preview": "npm run preview --workspace=web",
     "test": "npm run test --workspace=worker",
+    "deploy:api": "npm run deploy --workspace=worker",
+    "deploy:web": "npm run deploy --workspace=web",
+    "preview:pages": "npm run preview:pages --workspace=web",
     "db:local": "npm run db:local --workspace=worker",
     "db:remote": "npm run db:remote --workspace=worker"
   },

@@ -7,7 +7,10 @@
 import { spawn } from 'node:child_process';
 
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const ORIGIN = 'http://127.0.0.1:5173';
+// The Vite dev server by default. Point this at `wrangler pages dev` instead to
+// drive the built app through the Pages Function that serves `/api/*` in
+// production — the same journey over the deployment's own wiring.
+const ORIGIN = process.env.JOURNEY_ORIGIN ?? 'http://127.0.0.1:5173';
 const PORT = 9333;
 
 const problems = [];
