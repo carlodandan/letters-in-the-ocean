@@ -17,6 +17,8 @@ web/                  React + Vite client
   src/scenes/         Landing, FindScene, WriteScene
   src/lib/            audio, motion, sky, formatting
   src/styles/         tokens -> base -> app -> bottle -> letter
+  functions/api/      the Pages Function that serves /api/* from the site's origin
+  public/_routes.json keeps every other path off that function
   scripts/journey.mjs drives the real app in a headless browser (see Testing)
 worker/
   src/index.js        routing, CORS, security headers, request context
@@ -81,18 +83,50 @@ The public values in `wrangler.toml` are safe to edit:
 ## Deploy
 
 ```bash
-npm run db:remote                        # migrations against the real D1
-npm run deploy --workspace=worker        # the API
-npm run build                            # web/dist
-npx wrangler pages deploy web/dist       # or connect the repo to Pages
+npm run db:remote     # migrations against the real D1
+npm run deploy:api    # the worker
+npm run build         # web/dist
+npm run deploy:web    # the site (runs in web/, so functions/ is picked up)
 ```
 
-Point the API at the same origin as the site: the client calls `/api/*` with
-`credentials: 'same-origin'`, and the session cookie is `SameSite=Lax`, so a
-worker route on the site's own domain (`example.com/api/*`) keeps identity
-working with no CORS involved. `ALLOWED_ORIGIN` exists for local development and
-for the case where you deliberately split the two — a split deployment also needs
-the client switched to `credentials: 'include'`.
+Then bind the API to the site — **the deployment does not work until you do**.
+In the Cloudflare dashboard open the Pages project and go to *Settings →
+Bindings → Add → Service binding*: variable name `API`, service
+`letters-in-the-ocean-api`. Redeploy for it to take effect.
+
+Building from the repository instead of the CLI works the same way, as long as
+Pages is told where the app is: root directory `web`, build command `npm run
+build`, output directory `dist`. The function is found relative to that root, so
+a project rooted at the repository instead will deploy the site without it.
+
+### Why the binding is not optional
+
+The client fetches `/api/*` relative to wherever it is served from, which is what
+keeps the session cookie first-party and CORS out of the picture. Pages, though,
+only knows about static files: a Pages project with no `404.html` treats every
+unmatched path as a client-side route and answers it with `index.html` and a 200.
+So an unbound deployment returns the app shell for `/api/state`, the client tries
+to read HTML as JSON, and the whole site fails with *"The ocean answered in a
+language we do not speak."* — the parse error, not a server error.
+
+`web/functions/api/[[path]].js` is what answers instead. It hands the request to
+the worker unchanged, so the worker sees the visitor's own headers — including
+`cf-connecting-ip`, which the network half of the daily limit is derived from —
+and the reply, cookie included, comes back on the site's own origin. Everything
+outside `/api/*` never reaches it: `web/public/_routes.json` keeps the rest of the
+site on the static path.
+
+If you would rather not use a service binding, set a plain variable `API_ORIGIN`
+to the worker's own address (`https://letters-in-the-ocean-api.<subdomain>.workers.dev`)
+and the function will forward over the network instead. The binding is better:
+there is no second hop, and the worker needs no public URL at all — with it in
+place you can add `workers_dev = false` to `worker/wrangler.toml` and take the
+API off the internet.
+
+`ALLOWED_ORIGIN` plays no part in either arrangement, because the browser only
+ever talks to the site's origin. It matters if you deliberately split the two and
+point the client straight at the worker — which also needs the client switched to
+`credentials: 'include'`, since a `SameSite=Lax` cookie is not sent across sites.
 
 ## The API
 
@@ -177,6 +211,17 @@ synthesised rather than downloaded.
 ```bash
 npm test                      # 60 worker tests, node:test against a real SQLite D1 stand-in
 node web/scripts/journey.mjs  # drives the built app in headless Edge over CDP
+```
+
+The journey can also be pointed at the deployment's own wiring rather than the
+Vite proxy, which is worth doing before a deploy: it runs the built site behind
+the Pages Function and the service binding, so a `/api/*` path that only works in
+development cannot pass.
+
+```bash
+npm run dev:api                                  # the worker, as usual
+npm run build && npm run preview:pages           # the built site on :4173, API bound
+JOURNEY_ORIGIN=http://127.0.0.1:4173 node web/scripts/journey.mjs
 ```
 
 `journey.mjs` is a development tool rather than CI: with both dev servers running

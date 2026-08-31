@@ -14,7 +14,7 @@ enabled = true
 # Comma-separated. Both dev spellings of the Vite origin are listed because a
 # browser treats them as different origins; replace this with the Pages domain
 # for a real deployment.
-ALLOWED_ORIGIN = "http://localhost:5173,http://127.0.0.1:5173"
+ALLOWED_ORIGIN = "https://letters-in-the-ocean.pages.dev"
 DAILY_FIND_LIMIT = "1"
 DAILY_WRITE_LIMIT = "1"
 DAILY_REPORT_LIMIT = "3"
