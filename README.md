@@ -73,7 +73,7 @@ The public values in `wrangler.toml` are safe to edit:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `ALLOWED_ORIGIN` | the two dev origins | Comma-separated allowlist; set it to your Pages domain |
+| `ALLOWED_ORIGIN` | the Pages domain | Comma-separated allowlist, only consulted for cross-origin calls |
 | `DAILY_FIND_LIMIT` | `1` | Bottles found per visitor per UTC day |
 | `DAILY_WRITE_LIMIT` | `1` | Letters written per visitor per UTC day (a reply spends the same allowance) |
 | `DAILY_REPORT_LIMIT` | `3` | Reports per visitor per UTC day |
@@ -219,7 +219,7 @@ the Pages Function and the service binding, so a `/api/*` path that only works i
 development cannot pass.
 
 ```bash
-npm run dev:api                                  # the worker, as usual
+npm run dev:api                                  # the worker first: the binding resolves at startup
 npm run build && npm run preview:pages           # the built site on :4173, API bound
 JOURNEY_ORIGIN=http://127.0.0.1:4173 node web/scripts/journey.mjs
 ```

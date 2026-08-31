@@ -11,9 +11,11 @@ enabled = true
 #   wrangler secret put ADMIN_TOKEN
 # Secrets set that way override anything in [vars].
 [vars]
-# Comma-separated. Both dev spellings of the Vite origin are listed because a
-# browser treats them as different origins; replace this with the Pages domain
-# for a real deployment.
+# Comma-separated. The site reaches the API through its own origin, so this is
+# only consulted when something calls the worker cross-origin — a preflight from
+# anywhere else gets no CORS headers at all. Add the dev origins
+# (http://localhost:5173,http://127.0.0.1:5173) only if you stop proxying /api
+# in development.
 ALLOWED_ORIGIN = "https://letters-in-the-ocean.pages.dev"
 DAILY_FIND_LIMIT = "1"
 DAILY_WRITE_LIMIT = "1"
