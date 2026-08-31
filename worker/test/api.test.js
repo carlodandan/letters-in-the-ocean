@@ -454,6 +454,20 @@ describe('GET /api/stats', () => {
     assert.equal(typeof data.drifts, 'number');
   });
 
+  it('counts finds by people rather than by ledger rows', async () => {
+    const sea = ocean();
+    const found = await sea.visitor().get('/api/bottle/random');
+    assert.equal(found.status, 200);
+
+    // That single find wrote two rows: the visitor's, and one against their
+    // network bucket so that clearing a cookie cannot buy a second bottle. Only
+    // the first is a person finding a letter, and the public number must say so
+    // rather than reporting the size of the ledger.
+    const { data } = await sea.visitor().get('/api/stats');
+    assert.equal(data.found, 1);
+    assert.equal(data.foundToday, 1);
+  });
+
   it('is nobody in particular, so it never hands out an identity', async () => {
     const sea = ocean();
     // Reads must not mint a visitor. On a first visit several of them can be in

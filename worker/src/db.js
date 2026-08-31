@@ -209,13 +209,22 @@ export async function insertReport(db, { id, bottleId, reporterHash, reason, not
 // --- Statistics (secondary to the experience, so: cheap and cacheable) ------
 
 export async function oceanStats(db, day) {
+  /*
+   * Every action writes two rows into `interactions`: one against the visitor and
+   * one against their network bucket (see quota.js). The second is bookkeeping for
+   * the daily limit, not a person finding a letter, so the public counts ignore
+   * anything filed under a `net:` id — otherwise the homepage would claim twice as
+   * many letters had been found as ever were.
+   */
   const row = await db
     .prepare(
       `SELECT
          (SELECT COUNT(*) FROM bottles WHERE status = 'approved') AS letters,
          (SELECT COUNT(*) FROM bottles WHERE status = 'approved' AND depth > 0) AS replies,
-         (SELECT COUNT(*) FROM interactions WHERE action = 'find') AS found_total,
-         (SELECT COUNT(*) FROM interactions WHERE action = 'find' AND day = ?1) AS found_today,
+         (SELECT COUNT(*) FROM interactions
+           WHERE action = 'find' AND anonymous_id NOT LIKE 'net:%') AS found_total,
+         (SELECT COUNT(*) FROM interactions
+           WHERE action = 'find' AND day = ?1 AND anonymous_id NOT LIKE 'net:%') AS found_today,
          (SELECT COUNT(DISTINCT origin_country) FROM bottles
            WHERE status = 'approved' AND origin_country IS NOT NULL) AS countries,
          (SELECT COALESCE(SUM(hops), 0) FROM bottles) AS drifts`,
