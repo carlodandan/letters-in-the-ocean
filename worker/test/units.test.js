@@ -31,7 +31,8 @@ describe('validation', () => {
   });
 
   it('strips zero-width and control characters before anything else sees them', () => {
-    const smuggled = `sub​scribe to my­ channel`;
+    // eslint-disable-next-line no-irregular-whitespace
+    const smuggled = `sub​scribe to my­ channel `;
     assert.equal(normalizeMessage(smuggled), 'subscribe to my channel');
   });
 

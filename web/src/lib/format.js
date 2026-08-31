@@ -46,6 +46,7 @@ export function countCharacters(text) {
   const value = String(text ?? '');
   if (!segmenter) return [...value].length;
   let count = 0;
+  // eslint-disable-next-line no-unused-vars
   for (const _ of segmenter.segment(value)) count += 1;
   return count;
 }

@@ -37,12 +37,16 @@ export default function App() {
   const firstScene = useRef(true);
 
   const orient = useCallback(() => {
-    setLost(false);
     api
       .state()
       .then(setState)
       .catch(() => setLost(true));
   }, []);
+
+  const handleRetry = useCallback(() => {
+    setLost(false);
+    orient();
+  }, [orient]);
 
   useEffect(() => {
     // Deliberately not aborted on unmount: this read is the shell's one-time
@@ -95,7 +99,7 @@ export default function App() {
           stats={stats}
           lost={lost}
           onState={onState}
-          onRetry={orient}
+          onRetry={handleRetry}
           sound={sound}
         />
       </main>
