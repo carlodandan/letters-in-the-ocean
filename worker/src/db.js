@@ -57,6 +57,7 @@ export async function pickRandomBottle(db, { authorHash, visitorId }) {
     .prepare(
       `SELECT ${READER_COLUMNS} FROM bottles
         WHERE status = 'approved'
+          AND depth = 0
           AND author_hash <> ?1
           AND id NOT IN (
             SELECT bottle_id FROM interactions
@@ -74,7 +75,9 @@ export async function pickRandomBottle(db, { authorHash, visitorId }) {
   return db
     .prepare(
       `SELECT ${READER_COLUMNS} FROM bottles
-        WHERE status = 'approved' AND author_hash <> ?1
+        WHERE status = 'approved'
+          AND depth = 0
+          AND author_hash <> ?1
         ORDER BY RANDOM() LIMIT 1`,
     )
     .bind(authorHash)

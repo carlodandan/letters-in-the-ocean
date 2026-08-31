@@ -114,10 +114,35 @@
   color: var(--paper-ink-soft);
 }
 
+.letter-wrapper {
+  position: relative;
+  width: min(100%, 32rem);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
 .letter-actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.75rem;
+  /* Not animating on a delay gives screen readers less churn, but visually the
+     buttons should wait for the paper to finish unfolding. */
   animation: ink-appear 1200ms var(--ease-tide) 2600ms both;
+}
+
+@media (min-width: 64rem) {
+  .letter-wrapper {
+    transform: translateX(-7rem);
+  }
+
+  .letter-wrapper .letter-actions {
+    position: absolute;
+    left: calc(100% + 1rem);
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

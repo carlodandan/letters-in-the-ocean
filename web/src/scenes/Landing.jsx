@@ -20,20 +20,21 @@ export default function Landing({ state, stats }) {
         Somewhere out there, someone left a few words meant for whoever finds them.
       </p>
 
-      <Link className="tide-button" href="/find">
-        {alreadyFound ? 'Read today’s bottle' : 'Find a bottle'}
-      </Link>
-      <p className="quiet">{findHint(find, alreadyFound)}</p>
+      <div className="actions">
+        <Link className="tide-button" href="/find">
+          {alreadyFound ? 'Read today’s bottle' : 'Find a bottle'}
+        </Link>
+        <Link className="tide-button" href="/write">
+          Leave a letter
+        </Link>
+      </div>
 
-      <hr className="divider" />
-
-      <p className="quiet">Have something to say?</p>
-      <Link className="tide-button tide-button--quiet" href="/write">
-        Leave a letter
-      </Link>
-      {letter && !letter.available ? (
-        <p className="quiet">Your letter for today is already out there.</p>
-      ) : null}
+      <div>
+        <p className="quiet">{findHint(find, alreadyFound)}</p>
+        {letter && !letter.available ? (
+          <p className="quiet" style={{ marginTop: '0.5rem' }}>Your letter for today is already out there.</p>
+        ) : null}
+      </div>
 
       {stats ? (
         <p className="quiet stats">

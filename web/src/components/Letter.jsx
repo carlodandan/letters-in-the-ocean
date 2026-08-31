@@ -14,7 +14,7 @@ export default function Letter({ bottle, children }) {
   const age = formatAge(bottle.releasedOn);
 
   return (
-    <>
+    <div className="letter-wrapper">
       <article className="letter" aria-label="The letter you found">
         <div className="letter-text">
           {paragraphs.map((paragraph, index) => (
@@ -34,7 +34,7 @@ export default function Letter({ bottle, children }) {
         </footer>
       </article>
       {children}
-    </>
+    </div>
   );
 }
 
