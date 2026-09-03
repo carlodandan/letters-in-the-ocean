@@ -185,6 +185,14 @@ export default function FindScene({ onState, sound, reportReasons }) {
         </div>
       ) : null}
 
+      {stage === 'gone' ? (
+        <div className="actions">
+          <button type="button" className="tide-button tide-button--quiet" onClick={look}>
+            Look for another
+          </button>
+        </div>
+      ) : null}
+
       {stage !== 'reading' && stage !== 'searching' ? (
         <Link className="tide-button tide-button--text" href="/">
           Back to the shore
@@ -210,7 +218,7 @@ const TITLES = {
   reading: 'A letter, for whoever found it',
   gone: 'Back into the water',
   empty: 'The water is quiet',
-  blocked: 'One bottle a day',
+  blocked: 'Five bottles a day',
   lost: 'The ocean did not answer',
 };
 
@@ -219,6 +227,6 @@ const STATUS = {
   reading: 'The letter is open and readable below.',
   gone: 'The letter is back in the water.',
   empty: 'Nobody has left a letter yet.',
-  blocked: 'You have already found a bottle today.',
+  blocked: 'You have already found your five bottles today.',
   lost: 'The letter could not be fetched.',
 };

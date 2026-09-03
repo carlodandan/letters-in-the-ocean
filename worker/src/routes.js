@@ -109,7 +109,7 @@ export async function getRandomBottle(ctx) {
 
   const quota = await checkQuota(ctx, 'find');
   if (!quota.allowed) {
-    return fail(429, 'daily_limit', 'One bottle a day. The tide brings another tomorrow.', {
+    return fail(429, 'daily_limit', 'Five bottles a day. The tide brings more tomorrow.', {
       resetsAt: quota.resetsAt,
       today: await todayState(ctx),
     });
