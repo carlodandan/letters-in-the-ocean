@@ -3,7 +3,7 @@
 ![Letters in the Ocean](web/public/screenshots/letters-homepage.png)
 
 A quiet corner of the internet where strangers leave small pieces of kindness for
-each other. You can do two things here: find one bottle a day, and leave one
+each other. You can do two things here: find up to five bottles a day, and leave one
 letter a day. There are no accounts, no profiles, no likes and no feed.
 
 - **Frontend** — React + Vite, deployed to Cloudflare Pages.

@@ -108,7 +108,7 @@ export default function App() {
 
       <footer className="chrome chrome--bottom">
         <p className="quiet">
-          Anonymous, unrecorded, and gone when you close the tab. One letter, one bottle a day.
+          Anonymous, unrecorded, and gone when you close the tab. One letter, five bottles a day.
           <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>•</span>
           <button 
             type="button" 

@@ -18,7 +18,7 @@ enabled = true
 # (http://localhost:5173,http://127.0.0.1:5173) only if you stop proxying /api
 # in development.
 ALLOWED_ORIGIN = "https://letters-in-the-ocean.pages.dev"
-DAILY_FIND_LIMIT = "1"
+DAILY_FIND_LIMIT = "5"
 DAILY_WRITE_LIMIT = "1"
 DAILY_REPORT_LIMIT = "3"
 DAILY_IP_MULTIPLIER = "6"
