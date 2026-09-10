@@ -70,6 +70,13 @@ export default function FindScene({ onState, sound, reportReasons }) {
   async function openBottle() {
     if (stage !== 'afloat') return;
     setStage('opening');
+
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'open_bottle', {
+        event_category: 'engagement',
+      });
+    }
+
     sound.play('cork');
     await wait(1600, reduced);
     sound.play('paper');

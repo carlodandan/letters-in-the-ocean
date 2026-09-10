@@ -71,6 +71,14 @@ export default function WriteScene({ onState, sound, limits, replyTo }) {
       sound.play('splash');
       const result = replyTo ? await api.reply(replyTo, text) : await api.leaveLetter(text);
       if (result.today) onState?.(result.today);
+      
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'send_letter', {
+          event_category: 'engagement',
+          is_reply: !!replyTo
+        });
+      }
+
       await wait(1200, reduced);
       setStage(result.pending ? 'held' : 'released');
       setNotice(result.message);
