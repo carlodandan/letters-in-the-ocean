@@ -9,8 +9,20 @@ export default defineConfig({
   plugins: [
     react(),
     Sitemap({
-      hostname: 'https://letters-in-the-ocean.pages.dev',
-      dynamicRoutes: ['/find', '/write', '/privacy'],
+      hostname: 'https://letters-in-the-ocean.eu.cc',
+      dynamicRoutes: [
+				'/',
+				'/find',
+				'/write',
+				'/privacy',
+			],
+
+			priority: {
+				'/': 1.0,
+				'/find': 0.8,
+				'/write': 0.7,
+				'/privacy': 0.6,
+			},
       readable: true,
       robots: [
         {

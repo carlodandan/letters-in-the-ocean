@@ -4,7 +4,7 @@
  */
 
 const READER_COLUMNS =
-  'id, message, parent_id, root_id, depth, hops, found_count, reply_count, created_at';
+  "id, message, parent_id, root_id, depth, hops, found_count, reply_count, created_at";
 
 const REPORTS_BEFORE_AUTO_HIDE = 3;
 
@@ -28,19 +28,21 @@ export async function insertBottle(db, bottle) {
       bottle.moderationReasons,
       bottle.originCountry ?? null,
       bottle.createdAt,
-      bottle.status === 'approved' ? bottle.createdAt : null,
+      bottle.status === "approved" ? bottle.createdAt : null,
     )
     .run();
   return bottle.id;
 }
 
 export function getBottle(db, id) {
-  return db.prepare('SELECT * FROM bottles WHERE id = ?1').bind(id).first();
+  return db.prepare("SELECT * FROM bottles WHERE id = ?1").bind(id).first();
 }
 
 export function getReadableBottle(db, id) {
   return db
-    .prepare(`SELECT ${READER_COLUMNS} FROM bottles WHERE id = ?1 AND status = 'approved'`)
+    .prepare(
+      `SELECT ${READER_COLUMNS} FROM bottles WHERE id = ?1 AND status = 'approved'`,
+    )
     .bind(id)
     .first();
 }
@@ -85,7 +87,10 @@ export async function pickRandomBottle(db, { authorHash, visitorId }) {
 }
 
 /** Returns true when the row was new (the unique index makes this idempotent). */
-export async function recordInteraction(db, { id, anonymousId, bottleId, action, day, createdAt }) {
+export async function recordInteraction(
+  db,
+  { id, anonymousId, bottleId, action, day, createdAt },
+) {
   const result = await db
     .prepare(
       `INSERT OR IGNORE INTO interactions (id, anonymous_id, bottle_id, action, day, created_at)
@@ -121,12 +126,15 @@ export async function findTodaysBottleId(db, { anonymousId, day }) {
 }
 
 export function incrementFoundCount(db, id) {
-  return db.prepare('UPDATE bottles SET found_count = found_count + 1 WHERE id = ?1').bind(id).run();
+  return db
+    .prepare("UPDATE bottles SET found_count = found_count + 1 WHERE id = ?1")
+    .bind(id)
+    .run();
 }
 
 /** Did this visitor ever pull this particular bottle out of the water? */
 export async function hasFound(db, { anonymousId, bottleId }) {
-  return hasInteraction(db, { anonymousId, bottleId, action: 'find' });
+  return hasInteraction(db, { anonymousId, bottleId, action: "find" });
 }
 
 export async function hasInteraction(db, { anonymousId, bottleId, action }) {
@@ -157,14 +165,22 @@ export async function countRejectedSince(db, { authorHash, since }) {
 }
 
 export function incrementReplyCount(db, id) {
-  return db.prepare('UPDATE bottles SET reply_count = reply_count + 1 WHERE id = ?1').bind(id).run();
+  return db
+    .prepare("UPDATE bottles SET reply_count = reply_count + 1 WHERE id = ?1")
+    .bind(id)
+    .run();
 }
 
 // --- Journeys: "send it further" -------------------------------------------
 
-export async function recordDrift(db, { id, bottleId, anonymousId, country, createdAt }) {
+export async function recordDrift(
+  db,
+  { id, bottleId, anonymousId, country, createdAt },
+) {
   const bottle = await db
-    .prepare('UPDATE bottles SET hops = hops + 1, last_drift_at = ?2 WHERE id = ?1 RETURNING hops')
+    .prepare(
+      "UPDATE bottles SET hops = hops + 1, last_drift_at = ?2 WHERE id = ?1 RETURNING hops",
+    )
     .bind(bottleId, createdAt)
     .first();
   const hop = bottle?.hops ?? 1;
@@ -180,7 +196,10 @@ export async function recordDrift(db, { id, bottleId, anonymousId, country, crea
 
 // --- Reports ---------------------------------------------------------------
 
-export async function insertReport(db, { id, bottleId, reporterHash, reason, note, createdAt }) {
+export async function insertReport(
+  db,
+  { id, bottleId, reporterHash, reason, note, createdAt },
+) {
   const inserted = await db
     .prepare(
       `INSERT INTO reports (id, bottle_id, reporter_hash, reason, note, created_at)
@@ -202,7 +221,9 @@ export async function insertReport(db, { id, bottleId, reporterHash, reason, not
   // a human decides afterwards. Hiding is reversible, harm is not.
   if (count >= REPORTS_BEFORE_AUTO_HIDE) {
     await db
-      .prepare(`UPDATE bottles SET status = 'hidden' WHERE id = ?1 AND status = 'approved'`)
+      .prepare(
+        `UPDATE bottles SET status = 'hidden' WHERE id = ?1 AND status = 'approved'`,
+      )
       .bind(bottleId)
       .run();
   }
@@ -247,7 +268,10 @@ export async function oceanStats(db, day) {
 
 // --- Moderation queue (admin) ----------------------------------------------
 
-export async function moderationQueue(db, { status = 'pending', limit = 50 } = {}) {
+export async function moderationQueue(
+  db,
+  { status = "pending", limit = 50 } = {},
+) {
   const result = await db
     .prepare(
       `SELECT id, message, parent_id, depth, status, moderation_score, moderation_reasons,
@@ -274,7 +298,9 @@ export async function setBottleStatus(db, id, status, approvedAt) {
 
 export async function resolveReports(db, bottleId, status) {
   await db
-    .prepare(`UPDATE reports SET status = ?2 WHERE bottle_id = ?1 AND status = 'open'`)
+    .prepare(
+      `UPDATE reports SET status = ?2 WHERE bottle_id = ?1 AND status = 'open'`,
+    )
     .bind(bottleId, status)
     .run();
 }

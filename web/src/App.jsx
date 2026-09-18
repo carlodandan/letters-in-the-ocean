@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import Ocean from './components/Ocean.jsx';
-import SoundToggle from './components/SoundToggle.jsx';
-import PrivacyModal from './components/PrivacyModal.jsx';
-import FindScene from './scenes/FindScene.jsx';
-import Landing from './scenes/Landing.jsx';
-import WriteScene from './scenes/WriteScene.jsx';
-import { api } from './api.js';
-import { useSound } from './lib/audio.js';
-import { skyLabel, useSky } from './lib/sky.js';
-import { Link, useRoute } from './router.jsx';
+import Ocean from "./components/Ocean.jsx";
+import SoundToggle from "./components/SoundToggle.jsx";
+import PrivacyModal from "./components/PrivacyModal.jsx";
+import FindScene from "./scenes/FindScene.jsx";
+import Landing from "./scenes/Landing.jsx";
+import WriteScene from "./scenes/WriteScene.jsx";
+import { api } from "./api.js";
+import { useSound } from "./lib/audio.js";
+import { skyLabel, useSky } from "./lib/sky.js";
+import { Link, useRoute } from "./router.jsx";
 
 /**
  * The shell.
@@ -21,10 +21,10 @@ import { Link, useRoute } from './router.jsx';
  */
 
 const TITLES = {
-  home: 'Letters in the Ocean',
-  find: 'Finding a bottle · Letters in the Ocean',
-  write: 'Leaving a letter · Letters in the Ocean',
-  reply: 'Writing back · Letters in the Ocean',
+  home: "Letters in the Ocean",
+  find: "Finding a bottle · Letters in the Ocean",
+  write: "Leaving a letter · Letters in the Ocean",
+  reply: "Writing back · Letters in the Ocean",
 };
 
 export default function App() {
@@ -55,7 +55,10 @@ export default function App() {
     // orientation, and cancelling it buys nothing while a dropped connection
     // costs a retry.
     orient();
-    api.stats().then(setStats).catch(() => {});
+    api
+      .stats()
+      .then(setStats)
+      .catch(() => {});
   }, [orient]);
 
   useEffect(() => {
@@ -108,19 +111,27 @@ export default function App() {
 
       <footer className="chrome chrome--bottom">
         <p className="quiet">
-          Anonymous, unrecorded, and gone when you close the tab. One letter, five bottles a day.
-          <span style={{ margin: '0 0.5rem', opacity: 0.5 }}>•</span>
-          <button 
-            type="button" 
-            className="quiet" 
-            style={{ background: 'none', border: 'none', padding: 0, textDecoration: 'underline', textUnderlineOffset: '0.2em', cursor: 'pointer' }}
+          Anonymous, unrecorded, and gone when you close the tab. One letter,
+          five bottles a day.
+          <span style={{ margin: "0 0.5rem", opacity: 0.5 }}>•</span>
+          <button
+            type="button"
+            className="quiet"
+            style={{
+              background: "none",
+              border: "none",
+              padding: 0,
+              textDecoration: "underline",
+              textUnderlineOffset: "0.2em",
+              cursor: "pointer",
+            }}
             onClick={() => setPrivacyOpen(true)}
           >
             Privacy
           </button>
         </p>
       </footer>
-      
+
       <PrivacyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </div>
   );
@@ -128,7 +139,7 @@ export default function App() {
 
 function Scene({ route, state, stats, lost, onState, onRetry, sound }) {
   // The homepage is worth reading before the server has said anything.
-  if (route.name === 'home') return <Landing state={state} stats={stats} />;
+  if (route.name === "home") return <Landing state={state} stats={stats} />;
 
   /*
    * Everything else acts, and acting needs an identity. GET /api/state is what
@@ -140,13 +151,25 @@ function Scene({ route, state, stats, lost, onState, onRetry, sound }) {
   if (!state) return lost ? <Unreachable onRetry={onRetry} /> : <Settling />;
 
   switch (route.name) {
-    case 'find':
+    case "find":
       return (
-        <FindScene key="find" onState={onState} sound={sound} reportReasons={state.reportReasons} />
+        <FindScene
+          key="find"
+          onState={onState}
+          sound={sound}
+          reportReasons={state.reportReasons}
+        />
       );
-    case 'write':
-      return <WriteScene key="write" onState={onState} sound={sound} limits={state.letter} />;
-    case 'reply':
+    case "write":
+      return (
+        <WriteScene
+          key="write"
+          onState={onState}
+          sound={sound}
+          limits={state.letter}
+        />
+      );
+    case "reply":
       return route.param ? (
         <WriteScene
           key={`reply:${route.param}`}
@@ -177,7 +200,9 @@ function Unreachable({ onRetry }) {
   return (
     <div className="scene">
       <h1 className="scene-title">The ocean is out of reach</h1>
-      <p className="lede">Nothing came back. It may be the connection rather than the water.</p>
+      <p className="lede">
+        Nothing came back. It may be the connection rather than the water.
+      </p>
       <div className="actions">
         <button type="button" className="tide-button" onClick={onRetry}>
           Try again
@@ -194,7 +219,9 @@ function Lost() {
   return (
     <div className="scene">
       <h1 className="scene-title">Nothing out here</h1>
-      <p className="lede">That stretch of water is empty. The shore is back this way.</p>
+      <p className="lede">
+        That stretch of water is empty. The shore is back this way.
+      </p>
       <Link className="tide-button" href="/">
         Back to the shore
       </Link>

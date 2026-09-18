@@ -1,5 +1,5 @@
-import { countInteractions } from './db.js';
-import { intVar } from './util.js';
+import { countInteractions } from "./db.js";
+import { intVar } from "./util.js";
 
 /**
  * Daily limits.
@@ -19,7 +19,7 @@ import { intVar } from './util.js';
  * KV, when bound, adds a short burst limiter in front of all of this.
  */
 
-export const ACTIONS = ['find', 'write', 'reply', 'drift', 'report'];
+export const ACTIONS = ["find", "write", "reply", "drift", "report"];
 
 export function limitsFor(env) {
   const find = intVar(env.DAILY_FIND_LIMIT, 1, { min: 1, max: 50 });
@@ -44,29 +44,53 @@ export function nextResetIso(day) {
 
 /** Actions that share a single allowance are counted together. */
 function bucketFor(action) {
-  return action === 'reply' ? 'write' : action;
+  return action === "reply" ? "write" : action;
 }
 
 async function usedCount(ctx, action) {
   const bucket = bucketFor(action);
-  if (bucket !== 'write') {
-    return countInteractions(ctx.db, { anonymousId: ctx.visitorId, action, day: ctx.day });
+  if (bucket !== "write") {
+    return countInteractions(ctx.db, {
+      anonymousId: ctx.visitorId,
+      action,
+      day: ctx.day,
+    });
   }
   const [written, replied] = await Promise.all([
-    countInteractions(ctx.db, { anonymousId: ctx.visitorId, action: 'write', day: ctx.day }),
-    countInteractions(ctx.db, { anonymousId: ctx.visitorId, action: 'reply', day: ctx.day }),
+    countInteractions(ctx.db, {
+      anonymousId: ctx.visitorId,
+      action: "write",
+      day: ctx.day,
+    }),
+    countInteractions(ctx.db, {
+      anonymousId: ctx.visitorId,
+      action: "reply",
+      day: ctx.day,
+    }),
   ]);
   return written + replied;
 }
 
 async function networkCount(ctx, action) {
   const bucket = bucketFor(action);
-  if (bucket !== 'write') {
-    return countInteractions(ctx.db, { anonymousId: ctx.network, action, day: ctx.day });
+  if (bucket !== "write") {
+    return countInteractions(ctx.db, {
+      anonymousId: ctx.network,
+      action,
+      day: ctx.day,
+    });
   }
   const [written, replied] = await Promise.all([
-    countInteractions(ctx.db, { anonymousId: ctx.network, action: 'write', day: ctx.day }),
-    countInteractions(ctx.db, { anonymousId: ctx.network, action: 'reply', day: ctx.day }),
+    countInteractions(ctx.db, {
+      anonymousId: ctx.network,
+      action: "write",
+      day: ctx.day,
+    }),
+    countInteractions(ctx.db, {
+      anonymousId: ctx.network,
+      action: "reply",
+      day: ctx.day,
+    }),
   ]);
   return written + replied;
 }
@@ -75,13 +99,25 @@ export async function checkQuota(ctx, action) {
   const limit = ctx.limits[action] ?? 1;
   const used = await usedCount(ctx, action);
   if (used >= limit) {
-    return { allowed: false, scope: 'visitor', used, limit, resetsAt: nextResetIso(ctx.day) };
+    return {
+      allowed: false,
+      scope: "visitor",
+      used,
+      limit,
+      resetsAt: nextResetIso(ctx.day),
+    };
   }
 
   const networkLimit = limit * ctx.limits.networkMultiplier;
   const networkUsed = await networkCount(ctx, action);
   if (networkUsed >= networkLimit) {
-    return { allowed: false, scope: 'network', used, limit, resetsAt: nextResetIso(ctx.day) };
+    return {
+      allowed: false,
+      scope: "network",
+      used,
+      limit,
+      resetsAt: nextResetIso(ctx.day),
+    };
   }
 
   return { allowed: true, used, limit, resetsAt: nextResetIso(ctx.day) };
@@ -94,8 +130,10 @@ export async function checkQuota(ctx, action) {
 export async function checkBurst(ctx, { limit = 40, windowSeconds = 60 } = {}) {
   if (!ctx.kv) return { allowed: true };
   const key = `burst:${ctx.network}:${Math.floor(Date.now() / (windowSeconds * 1000))}`;
-  const current = Number.parseInt((await ctx.kv.get(key)) ?? '0', 10) || 0;
+  const current = Number.parseInt((await ctx.kv.get(key)) ?? "0", 10) || 0;
   if (current >= limit) return { allowed: false, retryAfter: windowSeconds };
-  await ctx.kv.put(key, String(current + 1), { expirationTtl: Math.max(60, windowSeconds) });
+  await ctx.kv.put(key, String(current + 1), {
+    expirationTtl: Math.max(60, windowSeconds),
+  });
   return { allowed: true };
 }

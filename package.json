@@ -19,7 +19,9 @@
     "preview:pages": "npm run preview:pages --workspace=web",
     "db:local": "npm run db:local --workspace=worker",
     "db:remote": "npm run db:remote --workspace=worker",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "format": "prettier --write \"**/src/*.{js,jsx,css}\" \"**/index.html\"",
+    "format:check": "prettier --check \"**/src/*.{js,jsx,css}\" \"**/index.html\""
   },
   "engines": {
     "node": ">=22.5.0"
@@ -30,6 +32,7 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.5",
-    "globals": "^17.11.0"
+    "globals": "^17.11.0",
+    "prettier": "^3.9.8"
   }
 }

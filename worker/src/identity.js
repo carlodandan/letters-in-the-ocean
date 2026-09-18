@@ -1,8 +1,16 @@
-import { hmac, keyedHash, parseCookies, safeEqual, serializeCookie, utcDay, uuid } from './util.js';
+import {
+  hmac,
+  keyedHash,
+  parseCookies,
+  safeEqual,
+  serializeCookie,
+  utcDay,
+  uuid,
+} from "./util.js";
 
-const COOKIE_NAME = 'lio_visitor';
+const COOKIE_NAME = "lio_visitor";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 400;
-const VERSION = 'v1';
+const VERSION = "v1";
 
 /**
  * Anonymous identity.
@@ -23,9 +31,15 @@ const VERSION = 'v1';
  * thrown away. See the route table in index.js.
  */
 export async function readVisitor(request, env, { mint = true } = {}) {
-  const raw = parseCookies(request.headers.get('cookie')).get(COOKIE_NAME);
+  const raw = parseCookies(request.headers.get("cookie")).get(COOKIE_NAME);
   const parsed = await verifyToken(raw, env.SESSION_SECRET);
-  if (parsed) return { id: parsed.id, issuedAt: parsed.issuedAt, isNew: false, setCookie: null };
+  if (parsed)
+    return {
+      id: parsed.id,
+      issuedAt: parsed.issuedAt,
+      isNew: false,
+      setCookie: null,
+    };
   if (!mint) return { id: null, issuedAt: null, isNew: false, setCookie: null };
 
   const id = uuid();
@@ -33,7 +47,9 @@ export async function readVisitor(request, env, { mint = true } = {}) {
   const token = await signToken(id, issuedAt, env.SESSION_SECRET);
   const url = new URL(request.url);
   const secure =
-    url.protocol === 'https:' || url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+    url.protocol === "https:" ||
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1";
 
   return {
     id,
@@ -43,7 +59,7 @@ export async function readVisitor(request, env, { mint = true } = {}) {
       maxAge: COOKIE_MAX_AGE,
       httpOnly: true,
       secure,
-      sameSite: 'Lax',
+      sameSite: "Lax",
     }),
   };
 }
@@ -55,7 +71,7 @@ export async function signToken(id, issuedAt, secret) {
 
 export async function verifyToken(raw, secret) {
   if (!raw) return null;
-  const parts = raw.split('.');
+  const parts = raw.split(".");
   if (parts.length !== 4) return null;
   const [version, id, issuedAt, signature] = parts;
   if (version !== VERSION || !id || !issuedAt) return null;
@@ -75,9 +91,9 @@ export async function verifyToken(raw, secret) {
  */
 export async function networkBucket(request, env, day = utcDay()) {
   const ip =
-    request.headers.get('cf-connecting-ip') ??
-    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    'unknown';
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown";
   return `net:${await keyedHash(env.SESSION_SECRET, `${day}:${ip}`, 24)}`;
 }
 

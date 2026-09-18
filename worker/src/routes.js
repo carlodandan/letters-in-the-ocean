@@ -1,14 +1,14 @@
-import * as db from './db.js';
-import { decisionMessage, moderate, parseBlocklist } from './moderation.js';
-import { checkBurst, checkQuota, nextResetIso } from './quota.js';
+import * as db from "./db.js";
+import { decisionMessage, moderate, parseBlocklist } from "./moderation.js";
+import { checkBurst, checkQuota, nextResetIso } from "./quota.js";
 import {
   MAX_LENGTH,
   MIN_LENGTH,
   reportReasons,
   validateMessage,
   validateReport,
-} from './validate.js';
-import { fail, json, nowIso, uuid } from './util.js';
+} from "./validate.js";
+import { fail, json, nowIso, uuid } from "./util.js";
 
 /** A refused letter costs nothing, but refusals still get a ceiling. */
 const MAX_REJECTIONS_PER_DAY = 5;
@@ -28,23 +28,32 @@ function presentBottle(row) {
     // Journeys are recorded from day one; the UI can surface them whenever it
     // is ready for "this letter has drifted through 14 strangers".
     journeys: row.hops ?? 0,
-    releasedOn: String(row.created_at ?? '').slice(0, 10),
+    releasedOn: String(row.created_at ?? "").slice(0, 10),
   };
 }
 
 async function todayState(ctx) {
   const [find, letter, drift, foundId] = await Promise.all([
-    checkQuota(ctx, 'find'),
-    checkQuota(ctx, 'write'),
-    checkQuota(ctx, 'drift'),
+    checkQuota(ctx, "find"),
+    checkQuota(ctx, "write"),
+    checkQuota(ctx, "drift"),
     db.findTodaysBottleId(ctx.db, { anonymousId: ctx.visitorId, day: ctx.day }),
   ]);
 
   return {
     day: ctx.day,
     resetsAt: nextResetIso(ctx.day),
-    find: { available: find.allowed, used: find.used, limit: find.limit, bottleId: foundId },
-    letter: { available: letter.allowed, used: letter.used, limit: letter.limit },
+    find: {
+      available: find.allowed,
+      used: find.used,
+      limit: find.limit,
+      bottleId: foundId,
+    },
+    letter: {
+      available: letter.allowed,
+      used: letter.used,
+      limit: letter.limit,
+    },
     drift: { available: drift.allowed, used: drift.used, limit: drift.limit },
   };
 }
@@ -60,9 +69,14 @@ export async function getState(ctx) {
 async function guardBurst(ctx) {
   const burst = await checkBurst(ctx);
   if (burst.allowed) return null;
-  return fail(429, 'slow_down', 'The ocean is not going anywhere. Try again in a moment.', {
-    retryAfter: burst.retryAfter,
-  });
+  return fail(
+    429,
+    "slow_down",
+    "The ocean is not going anywhere. Try again in a moment.",
+    {
+      retryAfter: burst.retryAfter,
+    },
+  );
 }
 
 /**
@@ -98,7 +112,7 @@ export async function getRandomBottle(ctx) {
     if (existing) {
       return json({
         bottle: presentBottle(existing),
-        found: 'again',
+        found: "again",
         today: await todayState(ctx),
       });
     }
@@ -107,12 +121,17 @@ export async function getRandomBottle(ctx) {
     return handOverBottle(ctx, { replacing: true });
   }
 
-  const quota = await checkQuota(ctx, 'find');
+  const quota = await checkQuota(ctx, "find");
   if (!quota.allowed) {
-    return fail(429, 'daily_limit', 'Five bottles a day. The tide brings more tomorrow.', {
-      resetsAt: quota.resetsAt,
-      today: await todayState(ctx),
-    });
+    return fail(
+      429,
+      "daily_limit",
+      "Five bottles a day. The tide brings more tomorrow.",
+      {
+        resetsAt: quota.resetsAt,
+        today: await todayState(ctx),
+      },
+    );
   }
 
   return handOverBottle(ctx, { replacing: false });
@@ -126,25 +145,32 @@ async function handOverBottle(ctx, { replacing }) {
 
   if (!bottle) {
     // Nothing to find and nothing spent — the horizon is simply empty today.
-    return json({ bottle: null, found: 'nothing', today: await todayState(ctx) });
+    return json({
+      bottle: null,
+      found: "nothing",
+      today: await todayState(ctx),
+    });
   }
 
   const recorded = await db.recordInteraction(ctx.db, {
     id: uuid(),
     anonymousId: ctx.visitorId,
     bottleId: bottle.id,
-    action: 'find',
+    action: "find",
     day: ctx.day,
     createdAt: nowIso(),
   });
   if (recorded) {
     await db.incrementFoundCount(ctx.db, bottle.id);
-    await recordNetworkUse(ctx, 'find');
+    await recordNetworkUse(ctx, "find");
   }
 
   return json({
-    bottle: presentBottle({ ...bottle, found_count: (bottle.found_count ?? 0) + (recorded ? 1 : 0) }),
-    found: replacing ? 'replacement' : 'new',
+    bottle: presentBottle({
+      ...bottle,
+      found_count: (bottle.found_count ?? 0) + (recorded ? 1 : 0),
+    }),
+    found: replacing ? "replacement" : "new",
     today: await todayState(ctx),
   });
 }
@@ -154,13 +180,18 @@ async function handOverBottle(ctx, { replacing }) {
  * walk ids and browse the ocean — that would turn this into a feed.
  */
 export async function getBottle(ctx, id) {
-  const found = await db.hasFound(ctx.db, { anonymousId: ctx.visitorId, bottleId: id });
-  if (!found) return fail(404, 'not_found', 'That letter is not in your hands.');
+  const found = await db.hasFound(ctx.db, {
+    anonymousId: ctx.visitorId,
+    bottleId: id,
+  });
+  if (!found)
+    return fail(404, "not_found", "That letter is not in your hands.");
 
   const bottle = await db.getReadableBottle(ctx.db, id);
-  if (!bottle) return fail(410, 'drifted_away', 'That letter has drifted out of reach.');
+  if (!bottle)
+    return fail(410, "drifted_away", "That letter has drifted out of reach.");
 
-  return json({ bottle: presentBottle(bottle), found: 'again' });
+  return json({ bottle: presentBottle(bottle), found: "again" });
 }
 
 // --- Leaving a letter -------------------------------------------------------
@@ -175,29 +206,42 @@ async function releaseLetter(ctx, { rawMessage, parent }) {
   if (blocked) return blocked;
 
   const validation = validateMessage(rawMessage);
-  if (!validation.ok) return fail(400, validation.error.code, validation.error.message);
+  if (!validation.ok)
+    return fail(400, validation.error.code, validation.error.message);
 
-  const action = parent ? 'reply' : 'write';
+  const action = parent ? "reply" : "write";
   const quota = await checkQuota(ctx, action);
   if (!quota.allowed) {
-    return fail(429, 'daily_limit', 'One letter a day. Come back tomorrow and say the rest.', {
-      resetsAt: quota.resetsAt,
-      today: await todayState(ctx),
-    });
+    return fail(
+      429,
+      "daily_limit",
+      "One letter a day. Come back tomorrow and say the rest.",
+      {
+        resetsAt: quota.resetsAt,
+        today: await todayState(ctx),
+      },
+    );
   }
 
-  const verdict = moderate(validation.value, { blocklist: parseBlocklist(ctx.env.MODERATION_BLOCKLIST) });
+  const verdict = moderate(validation.value, {
+    blocklist: parseBlocklist(ctx.env.MODERATION_BLOCKLIST),
+  });
   const createdAt = nowIso();
 
-  if (verdict.decision === 'rejected') {
+  if (verdict.decision === "rejected") {
     const refusals = await db.countRejectedSince(ctx.db, {
       authorHash: ctx.authorHash,
       since: `${ctx.day}T00:00:00.000Z`,
     });
     if (refusals >= MAX_REJECTIONS_PER_DAY) {
-      return fail(429, 'too_many_attempts', 'Let’s pause here for today. The tide resets at midnight.', {
-        resetsAt: quota.resetsAt,
-      });
+      return fail(
+        429,
+        "too_many_attempts",
+        "Let’s pause here for today. The tide resets at midnight.",
+        {
+          resetsAt: quota.resetsAt,
+        },
+      );
     }
   }
 
@@ -209,15 +253,16 @@ async function releaseLetter(ctx, { rawMessage, parent }) {
     rootId: parent?.root_id ?? parent?.id ?? id,
     depth: parent ? (parent.depth ?? 0) + 1 : 0,
     authorHash: ctx.authorHash,
-    status: verdict.decision === 'rejected' ? 'rejected' : verdict.decision,
+    status: verdict.decision === "rejected" ? "rejected" : verdict.decision,
     moderationScore: verdict.score,
-    moderationReasons: verdict.reasons.length > 0 ? JSON.stringify(verdict.reasons) : null,
+    moderationReasons:
+      verdict.reasons.length > 0 ? JSON.stringify(verdict.reasons) : null,
     originCountry: ctx.country,
     createdAt,
   });
 
   // A refusal never costs somebody their letter for the day.
-  if (verdict.decision !== 'rejected') {
+  if (verdict.decision !== "rejected") {
     await db.recordInteraction(ctx.db, {
       id: uuid(),
       anonymousId: ctx.visitorId,
@@ -230,21 +275,24 @@ async function releaseLetter(ctx, { rawMessage, parent }) {
     if (parent) await db.incrementReplyCount(ctx.db, parent.id);
   }
 
-  const status = verdict.decision === 'rejected' ? 422 : 201;
+  const status = verdict.decision === "rejected" ? 422 : 201;
   const message = decisionMessage(verdict.decision, verdict.care);
   return json(
     {
-      bottle: verdict.decision === 'rejected' ? null : { id, status: verdict.decision },
-      released: verdict.decision === 'approved',
-      pending: verdict.decision === 'pending',
-      refused: verdict.decision === 'rejected',
+      bottle:
+        verdict.decision === "rejected"
+          ? null
+          : { id, status: verdict.decision },
+      released: verdict.decision === "approved",
+      pending: verdict.decision === "pending",
+      refused: verdict.decision === "rejected",
       care: verdict.care,
       message,
       // Refusals are errors as far as HTTP is concerned, so they carry the same
       // { error: { code, message } } shape everything else does. The client needs
       // no special case to show the writer why.
-      ...(verdict.decision === 'rejected'
-        ? { error: { code: 'letter_refused', message, care: verdict.care } }
+      ...(verdict.decision === "rejected"
+        ? { error: { code: "letter_refused", message, care: verdict.care } }
         : null),
       today: await todayState(ctx),
     },
@@ -257,12 +305,16 @@ export async function postBottle(ctx, body) {
 }
 
 export async function postReply(ctx, id, body) {
-  const found = await db.hasFound(ctx.db, { anonymousId: ctx.visitorId, bottleId: id });
-  if (!found) return fail(404, 'not_found', 'You can only answer a letter you found.');
+  const found = await db.hasFound(ctx.db, {
+    anonymousId: ctx.visitorId,
+    bottleId: id,
+  });
+  if (!found)
+    return fail(404, "not_found", "You can only answer a letter you found.");
 
   const parent = await db.getBottle(ctx.db, id);
-  if (!parent || parent.status !== 'approved') {
-    return fail(410, 'drifted_away', 'That letter has drifted out of reach.');
+  if (!parent || parent.status !== "approved") {
+    return fail(410, "drifted_away", "That letter has drifted out of reach.");
   }
   return releaseLetter(ctx, { rawMessage: body?.message, parent });
 }
@@ -278,12 +330,16 @@ export async function postRelease(ctx, id) {
   const blocked = await guardBurst(ctx);
   if (blocked) return blocked;
 
-  const found = await db.hasFound(ctx.db, { anonymousId: ctx.visitorId, bottleId: id });
-  if (!found) return fail(404, 'not_found', 'You can only send on a letter you found.');
+  const found = await db.hasFound(ctx.db, {
+    anonymousId: ctx.visitorId,
+    bottleId: id,
+  });
+  if (!found)
+    return fail(404, "not_found", "You can only send on a letter you found.");
 
   const bottle = await db.getBottle(ctx.db, id);
-  if (!bottle || bottle.status !== 'approved') {
-    return fail(410, 'drifted_away', 'That letter has drifted out of reach.');
+  if (!bottle || bottle.status !== "approved") {
+    return fail(410, "drifted_away", "That letter has drifted out of reach.");
   }
 
   // Tapping "release" twice is the same as tapping it once — check before the
@@ -291,15 +347,18 @@ export async function postRelease(ctx, id) {
   const already = await db.hasInteraction(ctx.db, {
     anonymousId: ctx.visitorId,
     bottleId: id,
-    action: 'drift',
+    action: "drift",
   });
   if (already) {
-    return json({ journeys: bottle.hops, message: 'It is already back in the water.' });
+    return json({
+      journeys: bottle.hops,
+      message: "It is already back in the water.",
+    });
   }
 
-  const quota = await checkQuota(ctx, 'drift');
+  const quota = await checkQuota(ctx, "drift");
   if (!quota.allowed) {
-    return fail(429, 'daily_limit', 'You have already sent one on today.', {
+    return fail(429, "daily_limit", "You have already sent one on today.", {
       resetsAt: quota.resetsAt,
     });
   }
@@ -309,12 +368,12 @@ export async function postRelease(ctx, id) {
     id: uuid(),
     anonymousId: ctx.visitorId,
     bottleId: id,
-    action: 'drift',
+    action: "drift",
     day: ctx.day,
     createdAt,
   });
 
-  await recordNetworkUse(ctx, 'drift');
+  await recordNetworkUse(ctx, "drift");
   const hop = await db.recordDrift(ctx.db, {
     id: uuid(),
     bottleId: id,
@@ -325,7 +384,7 @@ export async function postRelease(ctx, id) {
 
   return json({
     journeys: hop,
-    message: 'Back into the water. Someone else will find it now.',
+    message: "Back into the water. Someone else will find it now.",
     today: await todayState(ctx),
   });
 }
@@ -337,16 +396,22 @@ export async function postReport(ctx, id, body) {
   if (blocked) return blocked;
 
   const validation = validateReport(body);
-  if (!validation.ok) return fail(400, validation.error.code, validation.error.message);
+  if (!validation.ok)
+    return fail(400, validation.error.code, validation.error.message);
 
   const bottle = await db.getBottle(ctx.db, id);
-  if (!bottle) return fail(404, 'not_found', 'That letter does not exist.');
+  if (!bottle) return fail(404, "not_found", "That letter does not exist.");
 
-  const quota = await checkQuota(ctx, 'report');
+  const quota = await checkQuota(ctx, "report");
   if (!quota.allowed) {
-    return fail(429, 'daily_limit', 'Thank you — that is enough reports from here today.', {
-      resetsAt: quota.resetsAt,
-    });
+    return fail(
+      429,
+      "daily_limit",
+      "Thank you — that is enough reports from here today.",
+      {
+        resetsAt: quota.resetsAt,
+      },
+    );
   }
 
   const createdAt = nowIso();
@@ -354,13 +419,13 @@ export async function postReport(ctx, id, body) {
     id: uuid(),
     anonymousId: ctx.visitorId,
     bottleId: id,
-    action: 'report',
+    action: "report",
     day: ctx.day,
     createdAt,
   });
 
   if (recorded) {
-    await recordNetworkUse(ctx, 'report');
+    await recordNetworkUse(ctx, "report");
     await db.insertReport(ctx.db, {
       id: uuid(),
       bottleId: id,
@@ -372,7 +437,7 @@ export async function postReport(ctx, id, body) {
   }
 
   return json(
-    { message: 'Thank you. Someone will read it and act if they need to.' },
+    { message: "Thank you. Someone will read it and act if they need to." },
     { status: 202 },
   );
 }
@@ -384,15 +449,20 @@ const STATS_TTL_SECONDS = 60;
 export async function getStats(ctx) {
   const cacheKey = `stats:${ctx.day}`;
   if (ctx.kv) {
-    const cached = await ctx.kv.get(cacheKey, 'json');
-    if (cached) return json(cached, { headers: { 'cache-control': 'public, max-age=60' } });
+    const cached = await ctx.kv.get(cacheKey, "json");
+    if (cached)
+      return json(cached, {
+        headers: { "cache-control": "public, max-age=60" },
+      });
   }
 
   const stats = await db.oceanStats(ctx.db, ctx.day);
   if (ctx.kv) {
-    await ctx.kv.put(cacheKey, JSON.stringify(stats), { expirationTtl: STATS_TTL_SECONDS });
+    await ctx.kv.put(cacheKey, JSON.stringify(stats), {
+      expirationTtl: STATS_TTL_SECONDS,
+    });
   }
-  return json(stats, { headers: { 'cache-control': 'public, max-age=60' } });
+  return json(stats, { headers: { "cache-control": "public, max-age=60" } });
 }
 
 // --- Moderation (admin) -----------------------------------------------------
@@ -404,35 +474,49 @@ export async function getStats(ctx) {
  */
 function authorizeAdmin(ctx) {
   const expected = ctx.env.ADMIN_TOKEN;
-  if (!expected) return fail(503, 'moderation_disabled', 'Manual moderation is not configured.');
-  const header = ctx.request.headers.get('authorization') ?? '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
-  if (token !== expected) return fail(401, 'unauthorized', 'Not for you.');
+  if (!expected)
+    return fail(
+      503,
+      "moderation_disabled",
+      "Manual moderation is not configured.",
+    );
+  const header = ctx.request.headers.get("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  if (token !== expected) return fail(401, "unauthorized", "Not for you.");
   return null;
 }
 
-const MODERATABLE = new Set(['approved', 'rejected', 'hidden', 'pending']);
+const MODERATABLE = new Set(["approved", "rejected", "hidden", "pending"]);
 
 export async function getModerationQueue(ctx) {
   const denied = authorizeAdmin(ctx);
   if (denied) return denied;
 
-  const status = ctx.url.searchParams.get('status') ?? 'pending';
-  if (!MODERATABLE.has(status)) return fail(400, 'status_invalid', 'Unknown status.');
+  const status = ctx.url.searchParams.get("status") ?? "pending";
+  if (!MODERATABLE.has(status))
+    return fail(400, "status_invalid", "Unknown status.");
 
-  return json({ status, bottles: await db.moderationQueue(ctx.db, { status, limit: 50 }) });
+  return json({
+    status,
+    bottles: await db.moderationQueue(ctx.db, { status, limit: 50 }),
+  });
 }
 
 export async function postModeration(ctx, id, body) {
   const denied = authorizeAdmin(ctx);
   if (denied) return denied;
 
-  const status = String(body?.status ?? '');
-  if (!MODERATABLE.has(status)) return fail(400, 'status_invalid', 'Unknown status.');
+  const status = String(body?.status ?? "");
+  if (!MODERATABLE.has(status))
+    return fail(400, "status_invalid", "Unknown status.");
 
   const changed = await db.setBottleStatus(ctx.db, id, status, nowIso());
-  if (!changed) return fail(404, 'not_found', 'No such letter.');
+  if (!changed) return fail(404, "not_found", "No such letter.");
 
-  await db.resolveReports(ctx.db, id, status === 'approved' ? 'dismissed' : 'upheld');
+  await db.resolveReports(
+    ctx.db,
+    id,
+    status === "approved" ? "dismissed" : "upheld",
+  );
   return json({ id, status });
 }

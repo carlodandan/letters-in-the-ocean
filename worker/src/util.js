@@ -9,8 +9,8 @@ export function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     status: init.status ?? 200,
     headers: {
-      'content-type': 'application/json; charset=utf-8',
-      'cache-control': 'no-store',
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
       ...(init.headers ?? {}),
     },
   });
@@ -38,24 +38,31 @@ export function utcDay(date = new Date()) {
 }
 
 export function b64url(bytes) {
-  let binary = '';
+  let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replaceAll('=', '');
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
 }
 
 async function importHmacKey(secret) {
   return crypto.subtle.importKey(
-    'raw',
+    "raw",
     encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ['sign'],
+    ["sign"],
   );
 }
 
 export async function hmac(secret, message) {
   const key = await importHmacKey(secret);
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message),
+  );
   return b64url(new Uint8Array(signature));
 }
 
@@ -66,14 +73,16 @@ export async function keyedHash(secret, value, length = 32) {
 
 /** Constant-time-ish comparison, so signature checks don't leak by timing. */
 export function safeEqual(a, b) {
-  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length)
+    return false;
   let diff = 0;
-  for (let i = 0; i < a.length; i += 1) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < a.length; i += 1)
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
 }
 
 export function intVar(value, fallback, { min = 0, max = 1000 } = {}) {
-  const parsed = Number.parseInt(value ?? '', 10);
+  const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, parsed));
 }
@@ -81,8 +90,8 @@ export function intVar(value, fallback, { min = 0, max = 1000 } = {}) {
 export function parseCookies(header) {
   const jar = new Map();
   if (!header) return jar;
-  for (const part of header.split(';')) {
-    const index = part.indexOf('=');
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
     if (index === -1) continue;
     jar.set(part.slice(0, index).trim(), part.slice(index + 1).trim());
   }
@@ -90,10 +99,10 @@ export function parseCookies(header) {
 }
 
 export function serializeCookie(name, value, options = {}) {
-  const bits = [`${name}=${value}`, `Path=${options.path ?? '/'}`];
+  const bits = [`${name}=${value}`, `Path=${options.path ?? "/"}`];
   if (options.maxAge != null) bits.push(`Max-Age=${options.maxAge}`);
-  bits.push(`SameSite=${options.sameSite ?? 'Lax'}`);
-  if (options.httpOnly !== false) bits.push('HttpOnly');
-  if (options.secure !== false) bits.push('Secure');
-  return bits.join('; ');
+  bits.push(`SameSite=${options.sameSite ?? "Lax"}`);
+  if (options.httpOnly !== false) bits.push("HttpOnly");
+  if (options.secure !== false) bits.push("Secure");
+  return bits.join("; ");
 }

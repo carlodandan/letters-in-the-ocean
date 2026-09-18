@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStore } from "react";
 
 /* eslint-disable react-refresh/only-export-components */
 
@@ -11,13 +11,13 @@ import { useSyncExternalStore } from 'react';
  * buttons.
  */
 
-const NAVIGATE_EVENT = 'lio:navigate';
+const NAVIGATE_EVENT = "lio:navigate";
 
 function subscribe(callback) {
-  window.addEventListener('popstate', callback);
+  window.addEventListener("popstate", callback);
   window.addEventListener(NAVIGATE_EVENT, callback);
   return () => {
-    window.removeEventListener('popstate', callback);
+    window.removeEventListener("popstate", callback);
     window.removeEventListener(NAVIGATE_EVENT, callback);
   };
 }
@@ -27,15 +27,15 @@ function snapshot() {
 }
 
 export function useRoute() {
-  const path = useSyncExternalStore(subscribe, snapshot, () => '/');
-  const segments = path.split('/').filter(Boolean);
-  return { path, name: segments[0] ?? 'home', param: segments[1] ?? null };
+  const path = useSyncExternalStore(subscribe, snapshot, () => "/");
+  const segments = path.split("/").filter(Boolean);
+  return { path, name: segments[0] ?? "home", param: segments[1] ?? null };
 }
 
 export function navigate(to, { replace = false } = {}) {
   if (to === window.location.pathname) return;
-  if (replace) window.history.replaceState(null, '', to);
-  else window.history.pushState(null, '', to);
+  if (replace) window.history.replaceState(null, "", to);
+  else window.history.pushState(null, "", to);
   window.dispatchEvent(new Event(NAVIGATE_EVENT));
 }
 
@@ -46,7 +46,8 @@ export function navigate(to, { replace = false } = {}) {
 export function Link({ href, onNavigate, children, ...rest }) {
   function handleClick(event) {
     if (event.defaultPrevented || event.button !== 0) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+      return;
     event.preventDefault();
     onNavigate?.();
     navigate(href);

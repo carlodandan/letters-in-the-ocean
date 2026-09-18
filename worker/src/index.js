@@ -1,9 +1,9 @@
-import { authorHash, networkBucket, readVisitor } from './identity.js';
-import { limitsFor } from './quota.js';
-import * as routes from './routes.js';
-import { fail, json, utcDay } from './util.js';
+import { authorHash, networkBucket, readVisitor } from "./identity.js";
+import { limitsFor } from "./quota.js";
+import * as routes from "./routes.js";
+import { fail, json, utcDay } from "./util.js";
 
-const ID = '([A-Za-z0-9_-]{1,64})';
+const ID = "([A-Za-z0-9_-]{1,64})";
 const MAX_BODY_BYTES = 8 * 1024;
 
 /*
@@ -22,17 +22,26 @@ const ANONYMOUS = { identity: false };
  * part of somebody's day are allowed to hand out an identity, and the interface
  * only ever has one of those in flight.
  */
-const EXISTING = { identity: 'existing' };
+const EXISTING = { identity: "existing" };
 
 const ROUTES = [
-  ['GET', /^\/api\/health$/, () => json({ ok: true }), ANONYMOUS],
-  ['GET', /^\/api\/state$/, (ctx) => routes.getState(ctx), EXISTING],
-  ['GET', /^\/api\/stats$/, (ctx) => routes.getStats(ctx), ANONYMOUS],
-  ['GET', /^\/api\/bottle\/random$/, (ctx) => routes.getRandomBottle(ctx)],
-  ['GET', new RegExp(`^/api/bottle/${ID}$`), (ctx, [id]) => routes.getBottle(ctx, id), EXISTING],
-  ['POST', /^\/api\/bottle$/, (ctx, _params, body) => routes.postBottle(ctx, body)],
+  ["GET", /^\/api\/health$/, () => json({ ok: true }), ANONYMOUS],
+  ["GET", /^\/api\/state$/, (ctx) => routes.getState(ctx), EXISTING],
+  ["GET", /^\/api\/stats$/, (ctx) => routes.getStats(ctx), ANONYMOUS],
+  ["GET", /^\/api\/bottle\/random$/, (ctx) => routes.getRandomBottle(ctx)],
   [
-    'POST',
+    "GET",
+    new RegExp(`^/api/bottle/${ID}$`),
+    (ctx, [id]) => routes.getBottle(ctx, id),
+    EXISTING,
+  ],
+  [
+    "POST",
+    /^\/api\/bottle$/,
+    (ctx, _params, body) => routes.postBottle(ctx, body),
+  ],
+  [
+    "POST",
     new RegExp(`^/api/bottle/${ID}/reply$`),
     (ctx, [id], body) => routes.postReply(ctx, id, body),
     // Answering and sending on both require a letter you already found, so
@@ -40,54 +49,60 @@ const ROUTES = [
     EXISTING,
   ],
   [
-    'POST',
+    "POST",
     new RegExp(`^/api/bottle/${ID}/release$`),
     (ctx, [id]) => routes.postRelease(ctx, id),
     EXISTING,
   ],
   [
-    'POST',
+    "POST",
     new RegExp(`^/api/bottle/${ID}/report$`),
     (ctx, [id], body) => routes.postReport(ctx, id, body),
   ],
-  ['GET', /^\/api\/admin\/queue$/, (ctx) => routes.getModerationQueue(ctx)],
+  ["GET", /^\/api\/admin\/queue$/, (ctx) => routes.getModerationQueue(ctx)],
   [
-    'POST',
+    "POST",
     new RegExp(`^/api/admin/bottle/${ID}/moderate$`),
     (ctx, [id], body) => routes.postModeration(ctx, id, body),
   ],
 ];
 
 function corsHeaders(request, env) {
-  const origin = request.headers.get('origin');
-  const allowed = (env.ALLOWED_ORIGIN ?? '').split(',').map((value) => value.trim());
-  const headers = { vary: 'origin' };
-  if (origin && (allowed.includes(origin) || allowed.includes('*'))) {
-    headers['access-control-allow-origin'] = origin;
-    headers['access-control-allow-credentials'] = 'true';
-    headers['access-control-allow-methods'] = 'GET, POST, OPTIONS';
-    headers['access-control-allow-headers'] = 'content-type, authorization';
-    headers['access-control-max-age'] = '86400';
+  const origin = request.headers.get("origin");
+  const allowed = (env.ALLOWED_ORIGIN ?? "")
+    .split(",")
+    .map((value) => value.trim());
+  const headers = { vary: "origin" };
+  if (origin && (allowed.includes(origin) || allowed.includes("*"))) {
+    headers["access-control-allow-origin"] = origin;
+    headers["access-control-allow-credentials"] = "true";
+    headers["access-control-allow-methods"] = "GET, POST, OPTIONS";
+    headers["access-control-allow-headers"] = "content-type, authorization";
+    headers["access-control-max-age"] = "86400";
   }
   return headers;
 }
 
 const SECURITY_HEADERS = {
-  'x-content-type-options': 'nosniff',
-  'referrer-policy': 'no-referrer',
-  'permissions-policy': 'geolocation=(), microphone=(), camera=()',
-  'cross-origin-resource-policy': 'same-site',
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+  "cross-origin-resource-policy": "same-site",
 };
 
 async function readBody(request) {
-  const length = Number.parseInt(request.headers.get('content-length') ?? '0', 10);
-  if (Number.isFinite(length) && length > MAX_BODY_BYTES) return { tooLarge: true };
+  const length = Number.parseInt(
+    request.headers.get("content-length") ?? "0",
+    10,
+  );
+  if (Number.isFinite(length) && length > MAX_BODY_BYTES)
+    return { tooLarge: true };
   const text = await request.text();
   if (text.length > MAX_BODY_BYTES) return { tooLarge: true };
   if (!text) return { body: {} };
   try {
     const parsed = JSON.parse(text);
-    return { body: parsed && typeof parsed === 'object' ? parsed : {} };
+    return { body: parsed && typeof parsed === "object" ? parsed : {} };
   } catch {
     return { invalid: true };
   }
@@ -108,10 +123,19 @@ async function buildContext(request, env, { identity = true } = {}) {
   };
 
   if (!identity) {
-    return { ...shared, visitorId: null, visitorIsNew: false, setCookie: null, network: null, authorHash: null };
+    return {
+      ...shared,
+      visitorId: null,
+      visitorIsNew: false,
+      setCookie: null,
+      network: null,
+      authorHash: null,
+    };
   }
 
-  const visitor = await readVisitor(request, env, { mint: identity !== 'existing' });
+  const visitor = await readVisitor(request, env, {
+    mint: identity !== "existing",
+  });
 
   // Without an identity there is nothing this visitor can have spent and nothing
   // they can have found: the quota reads 0 and every lookup misses. The network
@@ -146,24 +170,38 @@ async function buildContext(request, env, { identity = true } = {}) {
 export async function handleRequest(request, env) {
   const cors = corsHeaders(request, env);
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: { ...cors, ...SECURITY_HEADERS } });
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: { ...cors, ...SECURITY_HEADERS },
+    });
   }
 
   const url = new URL(request.url);
-  const match = ROUTES.find(([method, pattern]) => method === request.method && pattern.test(url.pathname));
+  const match = ROUTES.find(
+    ([method, pattern]) =>
+      method === request.method && pattern.test(url.pathname),
+  );
 
   if (!match) {
     const pathExists = ROUTES.some(([, pattern]) => pattern.test(url.pathname));
     const response = pathExists
-      ? fail(405, 'method_not_allowed', 'That is not something you can do here.')
-      : fail(404, 'not_found', 'Nothing here.');
+      ? fail(
+          405,
+          "method_not_allowed",
+          "That is not something you can do here.",
+        )
+      : fail(404, "not_found", "Nothing here.");
     return decorate(response, cors, null);
   }
 
   if (!env.DB) {
     return decorate(
-      fail(503, 'no_database', 'The ocean is not connected yet. Run the D1 migrations.'),
+      fail(
+        503,
+        "no_database",
+        "The ocean is not connected yet. Run the D1 migrations.",
+      ),
       cors,
       null,
     );
@@ -177,9 +215,13 @@ export async function handleRequest(request, env) {
    * `wrangler secret put SESSION_SECRET`.
    */
   if (!env.SESSION_SECRET) {
-    console.error('missing_session_secret');
+    console.error("missing_session_secret");
     return decorate(
-      fail(503, 'not_configured', 'The ocean is not ready. SESSION_SECRET is not set.'),
+      fail(
+        503,
+        "not_configured",
+        "The ocean is not ready. SESSION_SECRET is not set.",
+      ),
       cors,
       null,
     );
@@ -192,21 +234,42 @@ export async function handleRequest(request, env) {
     const params = url.pathname.match(pattern)?.slice(1) ?? [];
 
     let body;
-    if (request.method === 'POST') {
+    if (request.method === "POST") {
       const parsed = await readBody(request);
       if (parsed.tooLarge) {
-        return decorate(fail(413, 'body_too_large', 'That is more than a bottle can hold.'), cors, ctx);
+        return decorate(
+          fail(413, "body_too_large", "That is more than a bottle can hold."),
+          cors,
+          ctx,
+        );
       }
       if (parsed.invalid) {
-        return decorate(fail(400, 'body_invalid', 'The request could not be read.'), cors, ctx);
+        return decorate(
+          fail(400, "body_invalid", "The request could not be read."),
+          cors,
+          ctx,
+        );
       }
       body = parsed.body;
     }
 
     return decorate(await handler(ctx, params, body), cors, ctx);
   } catch (error) {
-    console.error('request_failed', request.method, url.pathname, error?.stack ?? error);
-    return decorate(fail(500, 'ocean_unsettled', 'Something went wrong out at sea. Try again.'), cors, ctx);
+    console.error(
+      "request_failed",
+      request.method,
+      url.pathname,
+      error?.stack ?? error,
+    );
+    return decorate(
+      fail(
+        500,
+        "ocean_unsettled",
+        "Something went wrong out at sea. Try again.",
+      ),
+      cors,
+      ctx,
+    );
   }
 }
 
@@ -216,7 +279,7 @@ function decorate(response, cors, ctx) {
   for (const [key, value] of Object.entries({ ...cors, ...SECURITY_HEADERS })) {
     headers.set(key, value);
   }
-  if (ctx?.setCookie) headers.append('set-cookie', ctx.setCookie);
+  if (ctx?.setCookie) headers.append("set-cookie", ctx.setCookie);
   return new Response(response.body, { status: response.status, headers });
 }
 
