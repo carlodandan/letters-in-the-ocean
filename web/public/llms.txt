@@ -1,0 +1,17 @@
+# Letters in the Ocean
+
+> A quiet corner of the internet where strangers leave small pieces of kindness for each other. 
+
+## About
+Letters in the Ocean is an anonymous, ephemeral social experiment. There are no accounts, no profiles, no likes, and no endless feeds. 
+
+## Rules
+- You can find up to five bottles a day.
+- You can leave or reply to one letter a day.
+- Your letters are completely anonymous and unrecorded.
+
+## Privacy
+We do not collect personal information. We set a single, secure session cookie solely to enforce the daily limits.
+
+## Source
+This project is open-source and built with React, Vite, and Cloudflare Pages/Workers.
